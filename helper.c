@@ -59,3 +59,54 @@ int client_tcp_handshake(char * server_ip) {
 
   return serverd;
 }
+
+
+
+void ncurses(WINDOW ** chat_win, WINDOW ** input_win) { //create windows, nothing else!
+  initscr();
+
+  int h, w;
+  getmaxyx(stdscr, h, w); //store dimensions
+
+  * chat_win = newwin(h - 3, w, 0, 0);
+  * input_win = newwin(3, w, h - 3, 0); //coords work like processing / arrays
+
+  box( * input_win, 0, 0); //input has border (this is why width is >=3)
+
+  wrefresh( * chat_win); //mandatory for changes to be visible
+  wrefresh( * input_win);
+}
+
+
+void chatterbox(WINDOW ** chat_win, WINDOW ** input_win) {
+  ncurses(chat_win, input_win);
+
+  scrollok(*chat_win, TRUE); //allows chat to expand vertically
+
+  while (1) {
+
+    echo(); //visible inputs!
+
+    char input[200];
+    memset(input, 0, 200);
+
+    mvwprintw( * input_win, 1, 1, "> ");
+    wrefresh( * input_win);
+
+    wgetnstr( * input_win, input, 199); //get input, printed via echo when you enter (no need for refresh)
+
+    noecho(); //avoid random double-printing
+
+    if (strcmp(input, "q") == 0) break; //quit
+
+    wprintw( * chat_win, "NAME: %s\n", input);
+    wrefresh( * chat_win);
+
+    werase( * input_win); //clear input buff, including border
+    box( * input_win, 0, 0);
+
+    wrefresh( * input_win);
+  }
+
+  endwin();
+}

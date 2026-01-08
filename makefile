@@ -1,7 +1,7 @@
 .PHONY: client server clean compile
 compile: client.o server.o helper.o
-	@gcc -o cliont client.o helper.o
-	@gcc -o sorver server.o helper.o
+	@gcc -o cliont client.o helper.o -lncurses
+	@gcc -o sorver server.o helper.o -lncurses
 client: cliont
 	@./cliont
 server: sorver

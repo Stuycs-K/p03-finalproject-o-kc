@@ -11,5 +11,7 @@ I have, in, at least 6 hours, finished the basic framework of my helper file.
 - When the server and client accept and connect respectively, a handshake is completed
 (beginning to develop server logic)
 
-### 2024-01-07 - Brief description
-Expanded description including how much time was spent on task.
+### 2024-01-07 - Chatterbox
+In 5 hours, I have created a functional client prompter, tested in server.c
+- ncurses creates 2 windows: chat and input. The input window is boxed. The chat window is scrollable
+- starting on the client functions (send, recv, history)

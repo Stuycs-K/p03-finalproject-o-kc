@@ -16,6 +16,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include <ncurses.h>
+
 int makeServer();
 
 
@@ -26,4 +28,7 @@ int server_tcp_handshake(int ls);
 
 int client_tcp_handshake(char * server_ip);
 
+
+void ncurses(WINDOW** chat_win, WINDOW** input_win);
+void chatterbox(WINDOW ** chat_win, WINDOW ** input_win);
 #endif
