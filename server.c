@@ -1,32 +1,38 @@
 #include "helper.h"
 
-void subserver(int client_socket) {
+void recieve_respond(int client_socket, int* sds) {
+   char chat[SIZE];
+   memset(chat, 0, SIZE);
 
+   int bytes = recv(client_socket, chat, SIZE-1, 0);
+   otherchat[bytes] = '\0';
+
+   for(int i = 0; i < 100; i++){
+     send
+   }
 }
-WINDOW *chat_win, *input_win;
+
 int main(int argc, char * argv[]) {
 
-  chatterbox(&chat_win, &input_win);
-  return 0;
-}
-
-
-  /*
   int listen_socket = makeServer();
 
-  char* msgs[100];
-  int i = 0; //present history position
+  int sds[100];   //resets every cycle but different from select, actually both can be combined!!!
+
+  fd_set sd;
+  FD_ZERO( &sd );
 
   while (1) {
-    int client_socket = server_tcp_handshake(listen_socket);
+    FD_ZERO( &sd );
+    FD_SET(listen_socket,&sd);
 
-    int pid = fork();
-    if (!pid) {
-      subserver(client_socket);
 
-      close(client_socket);
-      exit(0);
-    } else {
-      close(client_socket); //parent accepts since if it was concurrent you would get blockage
+    if (FD_ISSET(listen_socket, &sd)) {   //client is sending info
+
+      int client_socket = server_tcp_handshake(listen_socket);
+      recieve_respond(client_socket);
+
+
     }
-  }*/
+
+  }
+}

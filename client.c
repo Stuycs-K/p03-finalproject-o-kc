@@ -2,8 +2,8 @@
 #include "helper.h"
 void client_chat(int ss){
   char chat[200];
-  memset(chat, 0, 200);
-  if(fgets(chat, 200, stdin)==NULL){  //recieve client input!!!
+  memset(chat, 0, SIZE);
+  if(fgets(chat, SIZE, stdin)==NULL){  //recieve client input!!!
     exit(0);
   }
   chat[strcspn(chat, "\n")] = '\0';
@@ -11,11 +11,12 @@ void client_chat(int ss){
   send(ss, chat, strlen(chat)+1, 0);
 }
 
-void client_get(int ss){
-  char otherchat[200];
-  memset(otherchat, 0, 200);
 
-  int bytes = recv(ss, otherchat, 199, 0);
+void client_get(int ss){
+  char otherchat[SIZE];
+  memset(otherchat, 0, SIZE);
+
+  int bytes = recv(ss, otherchat, SIZE-1, 0);
 
   otherchat[bytes] = '\0';
 
@@ -38,5 +39,6 @@ int main(int argc, char * argv[]) {
 
   while(1){
      client_chat(server_socket);
+
   }
 }

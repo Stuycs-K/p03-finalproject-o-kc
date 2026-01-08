@@ -68,8 +68,8 @@ void ncurses(WINDOW ** chat_win, WINDOW ** input_win) { //create windows, nothin
   int h, w;
   getmaxyx(stdscr, h, w); //store dimensions
 
-  * chat_win = newwin(h - 3, w, 0, 0);
-  * input_win = newwin(3, w, h - 3, 0); //coords work like processing / arrays
+  * chat_win = newwin(h - 4, w, 0, 0);
+  * input_win = newwin(4, w, h - 4, 0); //coords work like processing / arrays
 
   box( * input_win, 0, 0); //input has border (this is why width is >=3)
 
@@ -79,7 +79,7 @@ void ncurses(WINDOW ** chat_win, WINDOW ** input_win) { //create windows, nothin
 
 
 void chatterbox(WINDOW ** chat_win, WINDOW ** input_win) {
-  ncurses(chat_win, input_win);
+  ncurses(chat_win, input_win); //setup windows
 
   scrollok(*chat_win, TRUE); //allows chat to expand vertically
 
@@ -87,13 +87,13 @@ void chatterbox(WINDOW ** chat_win, WINDOW ** input_win) {
 
     echo(); //visible inputs!
 
-    char input[200];
-    memset(input, 0, 200);
+    char input[SIZE];
+    memset(input, 0, SIZE);
 
     mvwprintw( * input_win, 1, 1, "> ");
     wrefresh( * input_win);
 
-    wgetnstr( * input_win, input, 199); //get input, printed via echo when you enter (no need for refresh)
+    wgetnstr( * input_win, input, SIZE-1); //get input, printed via echo when you enter (no need for refresh)
 
     noecho(); //avoid random double-printing
 
