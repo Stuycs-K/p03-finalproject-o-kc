@@ -15,3 +15,9 @@ I have, in, at least 6 hours, finished the basic framework of my helper file.
 In 5 hours, I have created a functional client prompter, tested in server.c
 - ncurses creates 2 windows: chat and input. The input window is boxed. The chat window is scrollable
 - starting on the client functions (send, recv, history)
+
+### 2024-01-08 - Select & Server
+I have, in, at least 6 hours, applied select and also necessary server functions for greater control over clients  
+- The IP address is accessible by a struct array
+- The server will print name + chat
+- Client progress (forking strategy)
