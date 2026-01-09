@@ -25,13 +25,13 @@ int makeServer(){
 
 
 
-int server_tcp_handshake(int ls){
+int server_tcp_handshake(int ls, struct sockaddr_storage * client_addr){
     int client_socket;
 
-    struct sockaddr_storage client_addr;
+
     socklen_t sock_size = sizeof(client_addr);
 
-    client_socket = accept(ls, (struct sockaddr *) &client_addr, &sock_size);
+    client_socket = accept(ls, (struct sockaddr *) client_addr, &sock_size);
     //client ip addr isn't needed here***
 
     return client_socket;
@@ -61,6 +61,7 @@ int client_tcp_handshake(char * server_ip) {
 }
 
 
+//CLIENT COMPONENT:
 
 void ncurses(WINDOW ** chat_win, WINDOW ** input_win) { //create windows, nothing else!
   initscr();
@@ -75,16 +76,12 @@ void ncurses(WINDOW ** chat_win, WINDOW ** input_win) { //create windows, nothin
 
   wrefresh( * chat_win); //mandatory for changes to be visible
   wrefresh( * input_win);
+
+  scrollok(*chat_win, TRUE); //allows chat to expand vertically
 }
 
 
-void chatterbox(WINDOW ** chat_win, WINDOW ** input_win) {
-  ncurses(chat_win, input_win); //setup windows
-
-  scrollok(*chat_win, TRUE); //allows chat to expand vertically
-
-  while (1) {
-
+int chatterbox(WINDOW ** chat_win, WINDOW ** input_win, int ss) {
     echo(); //visible inputs!
 
     char input[SIZE];
@@ -95,9 +92,13 @@ void chatterbox(WINDOW ** chat_win, WINDOW ** input_win) {
 
     wgetnstr( * input_win, input, SIZE-1); //get input, printed via echo when you enter (no need for refresh)
 
+
     noecho(); //avoid random double-printing
 
-    if (strcmp(input, "q") == 0) break; //quit
+    if (strcmp(input, "q") == 0) return 0; //quit
+
+    input[strcspn(input, "\n")] = '\0';
+    send(ss, input, strlen(input)+1, 0);
 
     wprintw( * chat_win, "NAME: %s\n", input);
     wrefresh( * chat_win);
@@ -106,7 +107,5 @@ void chatterbox(WINDOW ** chat_win, WINDOW ** input_win) {
     box( * input_win, 0, 0);
 
     wrefresh( * input_win);
-  }
-
-  endwin();
+    return 1;
 }
