@@ -1,9 +1,6 @@
 // 149.89.40.112 is this machine's address if it is to function as a server
 #include "client.h"
 
-WINDOW ** chat_win;
-WINDOW ** input_win;
-
 int main(int argc, char * argv[]) {
   char * IP = "149.89.40.102";
   if (argc > 1) {

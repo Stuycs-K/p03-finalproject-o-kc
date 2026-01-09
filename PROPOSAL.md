@@ -32,3 +32,5 @@ Jan 5: Planning on what system features are needed
 Jan 6: Start helper file + .h libraries
 Jan 7: Make server file + client file using helpers
 Jan 8: Finish server and client
+Jan 9: Polish server and client
+Jan 10: Allow server to BAN people

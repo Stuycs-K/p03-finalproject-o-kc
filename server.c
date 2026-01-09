@@ -19,6 +19,9 @@ int main(int argc, char * argv[]) {
   fd_set read_sds;
   fd_set write_sds;
 
+  ncurses(chat_win, input_win);
+  int pid = fork();
+if (pid){
   while (1) {
     FD_ZERO( & read_sds);
     read_sds = master_sds;
@@ -29,6 +32,9 @@ int main(int argc, char * argv[]) {
 
     listener(listen_socket, & read_sds, & write_sds, & master_sds);  //recv, if there are any messages it also sends
   }
+}else{
+
+}
 }
 
 int new_maxfd(fd_set * master_sds, int old_max) {
@@ -156,4 +162,9 @@ void initialize_c() {
   for (int i = 0; i < 100; i++) {
     clients[i].active = 0;
   }
+}
+
+void user_interface(){
+  noecho();
+  cbreak();
 }
