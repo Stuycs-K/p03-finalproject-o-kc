@@ -27,7 +27,7 @@ int main(int argc, char * argv[]) {
     FD_ZERO( & write_sds);
     write_sds = master_sds;
 
-    listener(listen_socket, & read_sds, & write_sds, & master_sds);
+    listener(listen_socket, & read_sds, & write_sds, & master_sds);  //recv, if there are any messages it also sends
   }
 }
 

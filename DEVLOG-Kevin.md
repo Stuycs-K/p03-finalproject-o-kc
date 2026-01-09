@@ -21,3 +21,6 @@ I have, in, at least 6 hours, applied select and also necessary server functions
 - The IP address is accessible by a struct array
 - The server will print name + chat
 - Client progress (forking strategy)
+
+### 2024-01-09  - Client
+In 5 hours, I have created a functional client sender and reciever, using a client subprocess for recieving chat messages. In theory, select could be used with stdin but with only one child process its easier to manage forks

@@ -6,9 +6,9 @@ client: cliont
 	@./cliont
 server: sorver
 	@./sorver
-client.o: client.c helper.h
+client.o: client.c helper.h client.h
 	@gcc -c client.c
-server.o: server.c helper.h
+server.o: server.c helper.h server.h
 	@gcc -c server.c
 helper.o: helper.c helper.h
 	@gcc -c helper.c
