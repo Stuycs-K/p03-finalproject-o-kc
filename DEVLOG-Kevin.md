@@ -22,8 +22,15 @@ I have, in, at least 6 hours, applied select and also necessary server functions
 - The server will print name + chat
 - Client progress (forking strategy)
 
-### 2024-01-09 - Client
-In 5 hours, I have created a functional client sender and reciever, using a client subprocess for recieving chat messages. In theory, select could be used with stdin but with only one child process its easier to manage forks
+### 2024-01-09 - Client & Server (MVP)
+In 5 hours, I have created a functional client sender and receiver. Client fork was replaced with select
+- checks to read from stdin and server_socket per loop
+- fixed formatting bugs; limit ncurses updates based on select activity
+In 6 hours, I have created a function server sender, receiver, and user interface.
+- The server can kick clients using a convoluted stdin input (select registers stdin by character)
+   - can expand into a blacklist using another struct + activity array
+- Due to incorporating ncurses, server must have endwin() safety checks to prevent corruption
+- Some redundant code has been abstracted into methods (delete_client_name)
 
 ### 2024-01-10 -
 

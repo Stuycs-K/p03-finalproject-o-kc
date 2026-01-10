@@ -3,7 +3,7 @@
 
 #define PORT "19230"
 #define SIZE 200
-#define time
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

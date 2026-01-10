@@ -9,80 +9,75 @@ int main(int argc, char * argv[]) {
 
   initialize_c();
 
-
   int listen_socket = makeServer();
   maxfd = listen_socket;
 
-  fd_set master_sds;
   FD_ZERO( & master_sds);
 
-  fd_set read_sds;
-  fd_set write_sds;
-
-  ncurses(chat_win, input_win);
-  int pid = fork();
-if (pid){
+  ncurses( & chat_win, & input_win);
+  cbreak();
+  noecho();
   while (1) {
+    mvwprintw(input_win, 1, 1, "> ");
+    wrefresh(input_win);
+
     FD_ZERO( & read_sds);
     read_sds = master_sds;
     FD_SET(listen_socket, & read_sds);
+    FD_SET(STDIN_FILENO, & read_sds);
 
     FD_ZERO( & write_sds);
     write_sds = master_sds;
 
-    listener(listen_socket, & read_sds, & write_sds, & master_sds);  //recv, if there are any messages it also sends
+    listener(listen_socket); //recv, if there are any messages it also sends
   }
-}else{
-
-}
 }
 
-int new_maxfd(fd_set * master_sds, int old_max) {
+int new_maxfd(int old_max) {
   int max = 0;
   for (int fd = 0; fd <= old_max; fd++) {
-    if (FD_ISSET(fd, master_sds)) {
+    if (FD_ISSET(fd, & master_sds)) {
       max = fd;
     }
   }
   return max;
 }
 
-void recv_respond(int client_socket, fd_set * write_sds, fd_set * master_sds) {
+void recv_respond(int client_socket) {
   char chat[SIZE];
   memset(chat, 0, SIZE);
 
   int bytes = recv(client_socket, chat, SIZE - 1, 0); //recieve
 
   if (bytes <= 0) {
-    close(client_socket);
     delete_client(client_socket);
-    FD_CLR(client_socket, master_sds);
     return;
   }
 
   chat[bytes] = '\0';
 
-  char name_chat[SIZE+60];
+
+
+  char name_chat[SIZE + 60];
   snprintf(name_chat, sizeof(name_chat), "%s: %s", get_cname(client_socket), chat);
 
 
+
   for (int fd = 0; fd <= maxfd; fd++) {
-    if (FD_ISSET(fd, write_sds) && fd != client_socket) {
-      if (send(fd, name_chat, strlen(name_chat)+1, 0) < 0) { //and respond
-        close(fd);
+    if (FD_ISSET(fd, & write_sds) && fd != client_socket) {
+      if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
         delete_client(fd);
-        FD_CLR(fd, master_sds);
         if (fd == maxfd) {
-          maxfd = new_maxfd(master_sds, maxfd);
+          maxfd = new_maxfd(maxfd);
         }
       }
     }
   }
 }
 
-void listener(int listen_socket, fd_set * read_sds, fd_set * write_sds, fd_set * master_sds) {
-  int queue = select(maxfd + 1, read_sds, NULL, NULL, & tv);
-  if (FD_ISSET(listen_socket, read_sds)) {
+void listener(int listen_socket) {
+  int queue = select(maxfd + 1, & read_sds, NULL, NULL, & tv);
+  if (FD_ISSET(listen_socket, & read_sds)) {
     struct sockaddr_storage client_addr;
     int client_socket = server_tcp_handshake(listen_socket, & client_addr);
 
@@ -93,22 +88,33 @@ void listener(int listen_socket, fd_set * read_sds, fd_set * write_sds, fd_set *
     char client_ip[INET_ADDRSTRLEN];
     if (client_addr.ss_family == AF_INET) {
       struct sockaddr_in * s = (struct sockaddr_in * ) & client_addr;
-      inet_ntop(AF_INET, & s -> sin_addr, client_ip, sizeof(client_ip));  //get IP
+      inet_ntop(AF_INET, & s -> sin_addr, client_ip, sizeof(client_ip)); //get IP
     } else {
       //idk IPV6?
     }
 
     char name[50];
-    int bytes = recv(client_socket, name, 49, 0);                         //get name
-    name[bytes] = '\0';
-    add_client(client_socket, name, client_ip);                           //add
+    int bytes = recv(client_socket, name, 49, 0); //get name
+    if (bytes > 0) {
+      name[bytes] = '\0';
+      add_client(client_socket, name, client_ip); //add
 
-    FD_SET(client_socket, master_sds);
+      FD_SET(client_socket, & master_sds);
+    } else {
+      close(client_socket); //if name recv fails, then socket is freed before it even gets stored
+    }
+
     queue--;
   }
+
+  if (FD_ISSET(STDIN_FILENO, & read_sds)) {
+    user_interface( & special_status);
+    wrefresh(input_win);
+  }
+
   for (int fd = 0; fd <= maxfd && queue > 0; fd++) {
-    if (FD_ISSET(fd, read_sds) && fd != listen_socket) {
-      recv_respond(fd, write_sds, master_sds);                  //indicates server must recieve these client messages
+    if (FD_ISSET(fd, & read_sds) && fd != STDIN_FILENO && fd != listen_socket) {
+      recv_respond(fd); //indicates server must recieve these client messages
       queue--;
     }
   }
@@ -151,6 +157,20 @@ char * get_cip(int fd) {
 void delete_client(int fd) {
   for (int i = 0; i < 100; i++) {
     if (clients[i].active && clients[i].fd == fd) {
+      close(fd);
+      FD_CLR(fd, & master_sds);
+      clients[i].active = 0;
+      client_count--;
+      return;
+    }
+  }
+}
+
+void delete_client_name(char * key) {
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && !strcmp(key, clients[i].name)) {
+      close(clients[i].fd);
+      FD_CLR(clients[i].fd, & master_sds);
       clients[i].active = 0;
       client_count--;
       return;
@@ -164,7 +184,63 @@ void initialize_c() {
   }
 }
 
-void user_interface(){
-  noecho();
-  cbreak();
+void user_interface(int * special_status) {
+  static char special_store[50]; //when special status is activated, this emulates reading a string
+  static int pos = 0;
+
+  if (! * special_status) {
+    int c = wgetch(input_win);
+
+    if (c == 98) { //B for kick - ENTER kick mode
+      * special_status = 1;
+      pos = 0;
+      memset(special_store, 0, 50);
+
+      werase(input_win);
+      box(input_win, 0, 0);
+      mvwprintw(input_win, 1, 4, "Kick : ");
+      wrefresh(input_win);
+    }
+    else if (c == 113) { //Q for exit
+      endwin();
+      exit(1);
+    }
+  }
+  else if (* special_status == 1) {  // since select is valid EVEN WHEN theres only one character in stdin
+    int c = wgetch(input_win);      // cannot use wgetnstr!
+
+    if (c == '\n') {  //enter; 2 cases since mac doesnt register \n
+      special_store[pos] = '\0';
+
+      if (!strcmp(special_store, "return")){
+        * special_status = 0;
+        pos = 0;   //reset "string reading" operation
+      }else{
+        delete_client_name(special_store);
+      }
+
+
+      werase(input_win);
+      box(input_win, 0, 0);
+      wrefresh(input_win);
+    }
+    else if (c == KEY_BACKSPACE || c == 127 || c == 8) {  // Backspace may be differennt
+      if (pos > 0) {
+        pos--;
+        special_store[pos] = '\0';
+        werase(input_win);
+        box(input_win, 0, 0);
+        mvwprintw(input_win, 1, 4, "Kick : %s", special_store);
+        wrefresh(input_win);
+      }
+    }
+    else if (pos < 49 && c >= 65 && c <= 122) {              //fill buff with name (should contain all valid characters)
+      special_store[pos] = c;
+      pos++;
+      werase(input_win);
+      box(input_win, 0, 0);
+      mvwprintw(input_win, 1, 4, "Kick : %s", special_store);
+      wrefresh(input_win);
+    }
+  }
 }
