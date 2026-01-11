@@ -32,8 +32,19 @@ In 6 hours, I have created a function server sender, receiver, and user interfac
 - Due to incorporating ncurses, server must have endwin() safety checks to prevent corruption
 - Some redundant code has been abstracted into methods (delete_client_name)
 
-### 2024-01-10 -
+### 2024-01-10 - Server: Blacklisting & Whisper
+Created a blacklist to ban any bad ips
+Rudimental whisper code, /whisper “” allows private communication
+Code is A MESS, will fix + create personalized chat + history tmrw
+- (lots of copypaste to do whisper, will have to see where its optimal to abstract)
+- Personal chat could apply recv flags
+- History would be simple if I had clean code
+The personalized chat will be an extension of whisper, using ncurses to set up a new window
 
-### 2024-01-11 -
+Later refocusing on client.c, will format whispers and name tags to be different  
+
+### 2024-01-11 - Cleanup
+Created server helper methods, whisper is functional & tested
+Experimenting with approaches to do private chats
 
 ### 2024-01-12 -

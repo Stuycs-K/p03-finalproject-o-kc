@@ -6,7 +6,7 @@ int main(int argc, char * argv[]) {
   tv.tv_sec = 1;
   tv.tv_usec = 0;
 
-  char * IP = "192.168.1.88";
+  char * IP = "127.0.0.1";
   if (argc > 1) {
     IP = argv[1];
   }
@@ -17,12 +17,15 @@ int main(int argc, char * argv[]) {
   fgets(NAME, 49, stdin);
   NAME[strcspn(NAME, "\n")] = '\0';
 
+
   int server_socket = client_tcp_handshake(IP);
 
+
   if(send(server_socket, NAME, strlen(NAME) + 1, 0) <= 0) { //sends name
-    endwin();
+    perror("cant send name");
     exit(1);
   }
+
 
   FD_ZERO( & master_sds);
   FD_SET(server_socket, & master_sds);
@@ -65,7 +68,7 @@ int get_input(int ss){
 
   echo();
 
-  mvwprintw(input_win, 1, 1, "> ");
+  mvwprintw(input_win, 1, 1, "%s > ", NAME);
   wrefresh(input_win);
 
   wgetnstr(input_win, input, SIZE - 1);

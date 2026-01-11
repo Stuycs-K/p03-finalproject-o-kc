@@ -22,9 +22,17 @@ WINDOW * chat_win;
 WINDOW * input_win;
 int special_status;
 
+struct banned{
+  char ip[INET_ADDRSTRLEN];
+  int active;
+};
+struct banned blacklist[100];
+
 int new_maxfd(int old_max);
 
 void recv_respond(int client_socket);
+void header(char* name_chat, int cs, char* chat, char*addon);
+void sender(int fd, int cs, char* name_chat);
 
 void listener(int listen_socket);
 
@@ -32,13 +40,20 @@ int add_client(int fd, char*name, char* ip);
 
 char* get_cname(int fd);
 
+int get_cfd(char* name);
+
 char* get_cip(int fd);
 
 void delete_client(int fd);
 
-void delete_client_name(char* key);
+void delete_client_name(char* key, int ban);
+
+int add_banned(char * ip);
+int is_banned(char * ip);
 
 void initialize_c();
+void initialize_b();
 
 void user_interface(int * special_status);
+void parse_helper(int*special_status, int* pos, char*special_store);
 #endif
