@@ -13,7 +13,7 @@ int main(int argc, char * argv[]) {
 
   memset(NAME, 0, 50);
 
-  printf("Make a name: \n");
+  printf("Make a name (no spaces, use '_'): \n");
   fgets(NAME, 49, stdin);
   NAME[strcspn(NAME, "\n")] = '\0';
 

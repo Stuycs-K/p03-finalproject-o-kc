@@ -1,0 +1,279 @@
+void recv_respond(int client_socket) {
+  char chat[SIZE];
+  memset(chat, 0, SIZE);
+
+  int bytes = recv(client_socket, chat, SIZE - 1, 0); //recieve
+
+  if (bytes <= 0) {
+    delete_client(client_socket);
+    return;
+  }
+
+  chat[bytes] = '\0';
+
+  char name_chat[SIZE + 60];
+
+  if (!strncmp(chat, "/whisper ", 9) && bytes >= 12) {
+    char * pos = chat + 9; //go to named portion
+
+    char * name = strsep( & pos, " "); //split name and rest
+
+    header(name_chat, client_socket, pos, "whispers");
+
+    int wfd = get_cfd(name);
+    sender(wfd, client_socket, name_chat);
+    return;
+  }
+
+  header(name_chat, client_socket, chat, "");
+  for (int fd = 0; fd <= maxfd; fd++) {
+    if (FD_ISSET(fd, & write_sds) && fd != client_socket) {
+      sender(fd, client_socket, name_chat);
+    }
+  }
+}
+
+void header(char * name_chat, int cs, char * chat, char * addon) {
+  snprintf(name_chat, SIZE + 60, "%s %s: %s", get_cname(cs), addon, chat);
+}
+
+void sender(int fd, int cs, char * name_chat) {
+  if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
+    delete_client(fd);
+  }
+}
+
+void listener(int listen_socket) {
+  int queue = select(maxfd + 1, & read_sds, NULL, NULL, & tv);
+  if (FD_ISSET(listen_socket, & read_sds)) {
+    struct sockaddr_storage client_addr;
+    int client_socket = server_tcp_handshake(listen_socket, & client_addr);
+
+    if (client_socket > maxfd) {
+      maxfd = client_socket;
+    }
+
+    char client_ip[INET_ADDRSTRLEN];
+    if (ip_convert_check(char* client_ip, struct sockaddr_storage client_addr)) {
+      close(client_socket);
+    } else {
+      char name[50];
+      if (recvname(client_socket, name, client_ip)){
+        add_client(client_socket, name, client_ip); //add
+        FD_SET(client_socket, & master_sds);
+      } else {
+        close(client_socket); //if name recv fails, then socket is freed before it even gets stored
+      }
+      queue--;
+    }
+  }
+
+  if (FD_ISSET(STDIN_FILENO, & read_sds)) {
+    user_interface( & special_status);
+    wrefresh(input_win);
+  }
+
+  for (int fd = 0; fd <= maxfd && queue > 0; fd++) {
+    if (FD_ISSET(fd, & read_sds) && fd != STDIN_FILENO && fd != listen_socket) {
+      recv_respond(fd); //indicates server must recieve these client messages
+      queue--;
+    }
+  }
+}
+
+int ip_convert_check(char* ip, struct sockaddr_storage client_addr){
+  if (client_addr.ss_family == AF_INET) {
+    struct sockaddr_in * s = (struct sockaddr_in * ) & client_addr;
+    inet_ntop(AF_INET, & s -> sin_addr, client_ip, sizeof(client_ip)); //get IP
+  } else {
+    //idk IPV6?
+  }
+  return is_banned(ip);
+}
+
+int recvname(int fd, char* name, char* ip){
+  int bytes = recv(client_socket, name, 49, 0); //get name
+  if (bytes > 0) {
+    name[bytes] = '\0';
+  }
+  return bytes;
+}
+
+int add_client(int fd, char * name, char * ip) {
+  for (int i = 0; i < 100; i++) {
+    if (!clients[i].active) {
+      clients[i].fd = fd;
+      strncpy(clients[i].name, name, 49);
+
+      strncpy(clients[i].ip, ip, 16);
+      clients[i].ip[INET_ADDRSTRLEN - 1] = '\0';
+      clients[i].active = 1;
+      client_count++;
+      return i;
+    }
+  }
+  return -1;
+}
+
+char * get_cname(int fd) {
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && clients[i].fd == fd) {
+      return clients[i].name;
+    }
+  }
+  return NULL;
+}
+
+int get_cfd(char * name) {
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && !strcmp(name, clients[i].name)) {
+      return clients[i].fd;
+    }
+  }
+  return -1;
+}
+
+char * get_cip(int fd) {
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && clients[i].fd == fd) {
+      return clients[i].ip;
+    }
+  }
+  return NULL;
+}
+
+void delete_client(int fd) {
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && clients[i].fd == fd) {
+      close(fd);
+      FD_CLR(fd, & master_sds);
+      clients[i].active = 0;
+      client_count--;
+      return;
+    }
+  }
+  if (fd == max_fd){
+      new_maxfd(max_fd);  //updates the max_fd
+  }
+}
+
+void delete_client_name(char * key, int ban) {
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && !strcmp(key, clients[i].name)) {
+      close(clients[i].fd);
+      FD_CLR(clients[i].fd, & master_sds);
+      if (ban) {
+        add_banned(clients[i].ip);
+      }
+      clients[i].active = 0;
+      client_count--;
+      return;
+    }
+  }
+}
+
+int new_maxfd(int old_max) {
+  int max = 0;
+  for (int fd = 0; fd <= old_max; fd++) {
+    if (FD_ISSET(fd, & master_sds)) {
+      max = fd;
+    }
+  }
+  return max;
+}
+
+int add_banned(char * ip) {
+  for (int i = 0; i < 100; i++) {
+    if (!blacklist[i].active) {
+      strncpy(blacklist[i].ip, ip, 16);
+      blacklist[i].ip[INET_ADDRSTRLEN - 1] = '\0';
+      blacklist[i].active = 1;
+      return i;
+    }
+  }
+  return -1;
+}
+
+int is_banned(char * ip) {
+  for (int i = 0; i < 100; i++) {
+    if (blacklist[i].active && !strcmp(ip, blacklist[i].ip)) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+void initialize_c() {
+  for (int i = 0; i < 100; i++) {
+    clients[i].active = 0;
+  }
+}
+
+void initialize_b() {
+  for (int i = 0; i < 100; i++) {
+    blacklist[i].active = 0;
+  }
+}
+
+void user_interface(int * special_status) {
+  static char special_store[50]; //when special status is activated, this emulates reading a string
+  static int pos = 0;
+
+  if (! * special_status) {
+    int c = wgetch(input_win);
+
+    if (c == 98) { //B for kick - ENTER kick mode
+      * special_status = 1;
+      pos = 0;
+      memset(special_store, 0, 50);
+
+      werase(input_win);
+      box(input_win, 0, 0);
+      mvwprintw(input_win, 1, 4, "Kick : ");
+      wrefresh(input_win);
+    } else if (c == 113) { //Q for exit
+      endwin();
+      exit(1);
+    }
+  } else if ( * special_status == 1 || * special_status == 2) { // since select is valid EVEN WHEN theres only one character in stdin
+    parse_helper(special_status, & pos, special_store);
+  }
+}
+
+void parse_helper(int * special_status, int * pos, char * special_store) {
+  int c = wgetch(input_win); // cannot use wgetnstr!
+
+  if (c == '\n') { //enter; 2 cases since mac doesnt register \n
+    special_store[ * pos] = '\0';
+
+    if (!strcmp(special_store, "return")) {
+      * special_status = 0;
+      pos = 0; //reset "string reading" operation
+    } else {
+      int ban = 0;
+      if ( * special_status == 2) {
+        ban = 1;
+      }
+      delete_client_name(special_store, ban);
+    }
+    werase(input_win);
+    box(input_win, 0, 0);
+    wrefresh(input_win);
+  } else if (c == KEY_BACKSPACE || c == 127 || c == 8) { // Backspace may be differennt
+    if (pos > 0) {
+      pos--;
+      special_store[ * pos] = '\0';
+      werase(input_win);
+      box(input_win, 0, 0);
+      mvwprintw(input_win, 1, 4, "Kick : %s", special_store);
+      wrefresh(input_win);
+    }
+  } else if ( * pos < 49 && c >= 65 && c <= 122) { //fill buff with name (should contain all valid characters)
+    special_store[ * pos] = c;
+    pos++;
+    werase(input_win);
+    box(input_win, 0, 0);
+    mvwprintw(input_win, 1, 4, "Kick : %s", special_store);
+    wrefresh(input_win);
+  }
+}
