@@ -18,14 +18,7 @@ void recv_respond(int client_socket) {
   char name_chat[SIZE + 60];
 
   if (!strncmp(chat, "/whisper ", 9) && bytes >= 12) {
-    char * pos = chat + 9; //go to named portion
-
-    char * name = strsep( & pos, " "); //split name and rest
-
-    header(name_chat, client_socket, pos, "whispers");
-
-    int wfd = get_cfd(name);
-    sender(wfd, client_socket, name_chat);
+    whisper(name_chat, client_socket, chat);
     return;
   }
 
@@ -35,6 +28,14 @@ void recv_respond(int client_socket) {
       sender(fd, client_socket, name_chat);
     }
   }
+}
+
+void whisper(char * name_chat, int cs, char * chat){
+    char * pos = chat + 9; //go to named portion
+    char * name = strsep( & pos, " ");
+    header(name_chat, cs, pos, "whispers");
+    int wfd = get_cfd(name);
+    sender(wfd, cs, name_chat);
 }
 
 void header(char * name_chat, int cs, char * chat, char * addon) {

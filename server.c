@@ -1,5 +1,5 @@
-#include "server.h"
-
+#include "server_helper.h"
+client_count = 0;
 int main(int argc, char * argv[]) {
   tv.tv_sec = 1;
   tv.tv_usec = 0; //controls length that select will block (not using NULL since server may need actions independent of client)

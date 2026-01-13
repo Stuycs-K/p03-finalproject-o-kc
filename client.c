@@ -58,7 +58,13 @@ void client_get(int ss) {
   }
   otherchat[bytes] = '\0';
 
+  char* filter = otherchat;
+  strsep(&filter, " ");
+  if(strncmp(filter, "whispers",  8)){
+     attron(A_ITALIC);
+  }
   wprintw(chat_win, "%s\n", otherchat);
+  attroff(A_ITALIC);
   wrefresh(chat_win);
 }
 
