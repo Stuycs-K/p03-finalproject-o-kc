@@ -1,3 +1,7 @@
+#include "server_helper.h"
+
+int client_count = 0;  //any assignments must be done here
+
 void recv_respond(int client_socket) {
   char chat[SIZE];
   memset(chat, 0, SIZE);
@@ -54,11 +58,11 @@ void listener(int listen_socket) {
     }
 
     char client_ip[INET_ADDRSTRLEN];
-    if (ip_convert_check(char* client_ip, struct sockaddr_storage client_addr)) {
+    if (ip_convert_check(client_ip, client_addr)) {
       close(client_socket);
     } else {
       char name[50];
-      if (recvname(client_socket, name, client_ip)){
+      if (recvname(client_socket, name, client_ip)) {
         add_client(client_socket, name, client_ip); //add
         FD_SET(client_socket, & master_sds);
       } else {
@@ -69,7 +73,7 @@ void listener(int listen_socket) {
   }
 
   if (FD_ISSET(STDIN_FILENO, & read_sds)) {
-    user_interface( & special_status);
+    user_interface();
     wrefresh(input_win);
   }
 
@@ -81,18 +85,18 @@ void listener(int listen_socket) {
   }
 }
 
-int ip_convert_check(char* ip, struct sockaddr_storage client_addr){
+int ip_convert_check(char * ip, struct sockaddr_storage client_addr) {
   if (client_addr.ss_family == AF_INET) {
     struct sockaddr_in * s = (struct sockaddr_in * ) & client_addr;
-    inet_ntop(AF_INET, & s -> sin_addr, client_ip, sizeof(client_ip)); //get IP
+    inet_ntop(AF_INET, & s -> sin_addr, ip, INET_ADDRSTRLEN); //get IP
   } else {
     //idk IPV6?
   }
   return is_banned(ip);
 }
 
-int recvname(int fd, char* name, char* ip){
-  int bytes = recv(client_socket, name, 49, 0); //get name
+int recvname(int fd, char * name, char * ip) {
+  int bytes = recv(fd, name, 49, 0); //get name
   if (bytes > 0) {
     name[bytes] = '\0';
   }
@@ -149,11 +153,12 @@ void delete_client(int fd) {
       FD_CLR(fd, & master_sds);
       clients[i].active = 0;
       client_count--;
+
+      if (fd == maxfd) {
+        maxfd = new_maxfd(maxfd); //updates the max_fd
+      }
       return;
     }
-  }
-  if (fd == max_fd){
-      new_maxfd(max_fd);  //updates the max_fd
   }
 }
 
@@ -215,65 +220,67 @@ void initialize_b() {
   }
 }
 
-void user_interface(int * special_status) {
+void user_interface() {
   static char special_store[50]; //when special status is activated, this emulates reading a string
   static int pos = 0;
 
-  if (! * special_status) {
+  if (!special_status) {
     int c = wgetch(input_win);
 
-    if (c == 98) { //B for kick - ENTER kick mode
-      * special_status = 1;
-      pos = 0;
-      memset(special_store, 0, 50);
-
-      werase(input_win);
-      box(input_win, 0, 0);
-      mvwprintw(input_win, 1, 4, "Kick : ");
-      wrefresh(input_win);
-    } else if (c == 113) { //Q for exit
+    if (c == 98) { //b for kick - ENTER kick mode
+      new_status(1, "kick", &pos, special_store);
+    } else if (c == 66){ //B for Ban
+      new_status(2, "kick", &pos, special_store);
+      }else if (c == 113) { //Q for exit
       endwin();
       exit(1);
     }
-  } else if ( * special_status == 1 || * special_status == 2) { // since select is valid EVEN WHEN theres only one character in stdin
-    parse_helper(special_status, & pos, special_store);
+  } else if (special_status == 1 || special_status == 2) { // since select is valid EVEN WHEN theres only one character in stdin
+    parse_helper( & pos, special_store, "kick");
   }
 }
 
-void parse_helper(int * special_status, int * pos, char * special_store) {
+void new_status(int mode, char * modname, int* pos, char*special_store) {
+  special_status = mode;
+  *pos = 0;
+  memset(special_store, 0, 50);
+  werase(input_win);
+  box(input_win, 0, 0);
+  mvwprintw(input_win, 1, strlen(modname), "%s : ", modname);
+  wrefresh(input_win);
+}
+
+void status(char * modname, char*special_store) {
+  werase(input_win);
+  box(input_win, 0, 0);
+  mvwprintw(input_win, 1, strlen(modname), "%s : %s", modname, special_store);
+  wrefresh(input_win);
+}
+
+void parse_helper(int * pos, char * special_store, char * modname) {
   int c = wgetch(input_win); // cannot use wgetnstr!
 
   if (c == '\n') { //enter; 2 cases since mac doesnt register \n
     special_store[ * pos] = '\0';
 
     if (!strcmp(special_store, "return")) {
-      * special_status = 0;
-      pos = 0; //reset "string reading" operation
+      special_status = 0;
+      *pos = 0; //reset "string reading" operation
     } else {
-      int ban = 0;
-      if ( * special_status == 2) {
-        ban = 1;
-      }
-      delete_client_name(special_store, ban);
+      delete_client_name(special_store, special_status - 1);
     }
     werase(input_win);
     box(input_win, 0, 0);
     wrefresh(input_win);
   } else if (c == KEY_BACKSPACE || c == 127 || c == 8) { // Backspace may be differennt
-    if (pos > 0) {
-      pos--;
+    if (*pos > 0) {
+      (*pos)--;
       special_store[ * pos] = '\0';
-      werase(input_win);
-      box(input_win, 0, 0);
-      mvwprintw(input_win, 1, 4, "Kick : %s", special_store);
-      wrefresh(input_win);
+      status(modname, special_store);
     }
-  } else if ( * pos < 49 && c >= 65 && c <= 122) { //fill buff with name (should contain all valid characters)
+  } else if ( * pos < 49 && isprint(c)) { //fill buff with name (should contain all valid characters)
     special_store[ * pos] = c;
-    pos++;
-    werase(input_win);
-    box(input_win, 0, 0);
-    mvwprintw(input_win, 1, 4, "Kick : %s", special_store);
-    wrefresh(input_win);
+    (*pos)++;
+    status(modname, special_store);
   }
 }

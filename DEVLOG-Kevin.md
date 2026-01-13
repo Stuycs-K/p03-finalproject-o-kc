@@ -47,4 +47,5 @@ Later refocusing on client.c, will format whispers and name tags to be different
 Created server helper methods, whisper is functional & tested
 Experimenting with approaches to do private chats
 
-### 2024-01-12 -
+### 2024-01-12 - Cleanup II
+Made server helper bigger, and fixed ban which was broken
