@@ -1,7 +1,5 @@
 #include "server_helper.h"
 
-int client_count = 0;  //any assignments must be done here
-
 void recv_respond(int client_socket) {
   char chat[SIZE];
   memset(chat, 0, SIZE);
@@ -263,12 +261,12 @@ void parse_helper(int * pos, char * special_store, char * modname) {
 
   if (c == '\n') { //enter; 2 cases since mac doesnt register \n
     special_store[ * pos] = '\0';
-
     if (!strcmp(special_store, "return")) {
       special_status = 0;
       *pos = 0; //reset "string reading" operation
     } else {
       delete_client_name(special_store, special_status - 1);
+      *pos = 0;
     }
     werase(input_win);
     box(input_win, 0, 0);
@@ -282,6 +280,7 @@ void parse_helper(int * pos, char * special_store, char * modname) {
   } else if ( * pos < 49 && isprint(c)) { //fill buff with name (should contain all valid characters)
     special_store[ * pos] = c;
     (*pos)++;
+    special_store[*pos] = '\0';
     status(modname, special_store);
   }
 }

@@ -1,5 +1,15 @@
 #include "server_helper.h"
-client_count = 0;
+struct timeval tv;
+int maxfd = 0;
+struct clientinfo clients[100];
+int client_count = 0;
+fd_set master_sds;
+fd_set read_sds;
+fd_set write_sds;
+WINDOW * chat_win;
+WINDOW * input_win;
+int special_status = 0;
+struct banned blacklist[100];
 int main(int argc, char * argv[]) {
   tv.tv_sec = 1;
   tv.tv_usec = 0; //controls length that select will block (not using NULL since server may need actions independent of client)
