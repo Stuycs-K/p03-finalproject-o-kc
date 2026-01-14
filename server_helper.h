@@ -46,35 +46,38 @@ extern int special_status;
 
 
 //NETWORK-----------------------------
-void recv_respond(int client_socket);   //responds to an active client socket
-void whisper(char * name_chat, int cs, char * chat);
-void header(char* name_chat, int cs, char* chat, char*addon);  //formats a chat message to send based on the sent input
-void sender(int fd, int cs, char* name_chat);   //sends a chat message to a fd, with checks
+extern void recv_respond(int client_socket);   //responds to an active client socket
+extern void whisper(char * name_chat, int cs, char * chat);
+extern void header(char* name_chat, int cs, char* chat, char*addon);  //formats a chat message to send based on the sent input
+extern void sender(int fd, int cs, char* name_chat);   //sends a chat message to a fd, with checks
 
-void listener(int listen_socket);        //handles incoming fds
-int ip_convert_check(char* ip, struct sockaddr_storage client_addr);
-int recv_name(int fd, char * name, char * ip);
+extern void listener(int listen_socket);        //handles incoming fds
+extern int ip_convert_check(char* ip, struct sockaddr_storage client_addr);
+extern int recv_name(int fd, char * name, char * ip);
 
 
 //TEAM MANAGING---------------------
-int add_room(char * code);
-int same_room(int fd1, int fd2);
+extern int add_room(char * code);
+extern int same_room(int fd1, int fd2);
 
 //CLIENT MANAGING---------------------
-int add_client(int fd, char*name, char* ip); //add a client struct to list
+extern int add_client(int fd, char*name, char* ip); //add a client struct to list
 
-char* get_cname(int fd);  //get name from fd input
-int get_cfd(char* name);  //get fd from name input
-char * get_cip(int fd);    //get ip from fd input
-char * get_croomcode(int fd);
+extern char* get_cname(int fd);  //get name from fd input
+extern int get_cfd(char* name);  //get fd from name input
+extern char * get_cip(int fd);    //get ip from fd input
+extern char * get_croomcode(int fd);
 
-void delete_client(int fd);               //removes a client struct from list
-void delete_client_name(char* key, int ban);  //removes based on name and add to b_list
-int new_maxfd(int old_max);  //updates the max_fd
+extern int set_croomcode(int fd, char* code);
+
+extern void delete_client(int fd);               //removes a client struct from list
+extern void delete_client_name(char* key, int ban);  //removes based on name and add to b_list
+extern int new_maxfd(int old_max);  //updates the max_fd
 
 //BAN MANAGING-------------------------
 extern int add_banned(char * ip);  //add a banned ip to list
 extern int is_banned(char * ip);   //checks if ip is banned
+extern void remove_banned(char* ip); //experimental
 
 extern void initialize_c();
 extern void initialize_b();

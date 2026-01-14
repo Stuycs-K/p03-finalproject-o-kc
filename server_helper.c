@@ -15,7 +15,7 @@ void recv_respond(int client_socket) {
   chat[bytes] = '\0';
 
   char name_chat[SIZE + 60];
-
+        wprintw(chat_win, "doing stuff");
   if (!strncmp(chat, "/whisper ", 9) && bytes >= 12) {
     whisper(name_chat, client_socket, chat);
     return;
@@ -24,10 +24,12 @@ void recv_respond(int client_socket) {
 
     return;
   }
-
+        wprintw(chat_win, "doing stuff");
   header(name_chat, client_socket, chat, "");
   for (int fd = 0; fd <= maxfd; fd++) {
+          wprintw(chat_win, "doing stuff");
     if (FD_ISSET(fd, & write_sds) && fd != client_socket) {
+      wprintw(chat_win, "doing stuff");
       sender(fd, client_socket, name_chat);
     }
   }
@@ -114,15 +116,15 @@ int recv_name(int fd, char * name, char * ip) {
 //default is lobby
 
 int same_room(int fd1, int fd2){
-  if (strcmp(get_croomcode(fd1), get_croomcode(fd2))){
+  if (!strcmp(get_croomcode(fd1), get_croomcode(fd2))){
      return 1;
   }
   return 0;
 }
 
 void join_room(int cs, char* chat){
-   char* code = strsep(chat, " ");
-   set_croomcode(cs, char* code);
+   strsep(&chat, " ");
+   set_croomcode(cs, chat);
 }
 
 //CLIENT MANAGING---------------------
@@ -178,13 +180,15 @@ char * get_croomcode(int fd){
   return NULL;
 }
 
-void set_croomcode(int fd, char* code){
+int set_croomcode(int fd, char* code){
   for (int i = 0; i < 100; i++) {
     if (clients[i].active && clients[i].fd == fd) {
       strncpy(clients[i].room_code, code, 49);
       clients[i].room_code[49] = '\0';
+      return i;
     }
   }
+  return -1;
 }
 
 void delete_client(int fd) {
@@ -241,6 +245,14 @@ int add_banned(char * ip) {
   return -1;
 }
 
+void remove_banned(char* ip) {
+  for (int i = 0; i < 100; i++) {
+    if (blacklist[i].active && !strcmp(ip, blacklist[i].ip)) {
+      blacklist[i].active = 0;
+    }
+  }
+}
+
 int is_banned(char * ip) {
   for (int i = 0; i < 100; i++) {
     if (blacklist[i].active && !strcmp(ip, blacklist[i].ip)) {
@@ -253,7 +265,7 @@ int is_banned(char * ip) {
 void initialize_c() {
   for (int i = 0; i < 100; i++) {
     clients[i].active = 0;
-    strncpy(clients[i].room_code, "lobby", 5);
+    strncpy(clients[i].room_code, "lobby", 6);
     clients[i].room_code[5] = '\0';
   }
 }
@@ -275,13 +287,16 @@ void user_interface() {
     if (c == 98) { //b for kick - ENTER kick mode
       new_status(1, "kick", &pos, special_store);
     } else if (c == 66){ //B for Ban
-      new_status(2, "kick", &pos, special_store);
+      new_status(2, "ban", &pos, special_store);
       }else if (c == 113) { //Q for exit
       endwin();
       exit(1);
     }
-  } else if (special_status == 1 || special_status == 2) { // since select is valid EVEN WHEN theres only one character in stdin
+  } else if (special_status == 1) { // since select is valid EVEN WHEN theres only one character in stdin
     parse_helper( & pos, special_store, "kick");
+  }
+  else if (special_status == 2){
+    parse_helper( & pos, special_store, "ban");
   }
 }
 

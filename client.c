@@ -27,6 +27,7 @@ int main(int argc, char * argv[]) {
   }
 
 
+
   FD_ZERO( & master_sds);
   FD_SET(server_socket, & master_sds);
   FD_SET(STDIN_FILENO, & master_sds);
@@ -48,6 +49,7 @@ int main(int argc, char * argv[]) {
 }
 
 void client_get(int ss) {
+
   char otherchat[SIZE + 60];
   memset(otherchat, 0, SIZE + 60);
 
@@ -92,6 +94,8 @@ int get_input(int ss){
   wprintw(chat_win, "%s: %s\n", NAME, input);
   wrefresh(chat_win);
 
+//  wprintw(chat_win, "asdasdads\n");
+//  wrefresh(chat_win);
   if (send(ss, input, strlen(input) + 1, 0) <= 0) {
     endwin();
     exit(1);
