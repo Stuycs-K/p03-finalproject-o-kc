@@ -8,11 +8,19 @@
 //TIME TRACKER
 extern struct timeval tv;
 
+//ROOM MANAGING
+struct room{
+  char code[50];
+  int active;
+};
+extern struct room room_codes[100];
+
 //CLIENT MANAGING
 struct clientinfo{
   int fd;
   char name[50];
   char ip[INET_ADDRSTRLEN];
+  char room_code[50];
   int active;          //this makes adding and removing easier since theres no need to shift
 }; //1 active 0 inactive
 extern struct clientinfo clients[100];
@@ -25,7 +33,7 @@ struct banned{
 };
 extern struct banned blacklist[100];
 
-//NETWORK
+//NETWORK & ClIENT++
 extern fd_set master_sds;
 extern fd_set read_sds;
 extern fd_set write_sds;
@@ -47,9 +55,10 @@ void listener(int listen_socket);        //handles incoming fds
 int ip_convert_check(char* ip, struct sockaddr_storage client_addr);
 int recv_name(int fd, char * name, char * ip);
 
-//TEAM MANAGING
-char* teams[100];
 
+//TEAM MANAGING---------------------
+int add_room(char * code);
+int same_room(int fd1, int fd2);
 
 //CLIENT MANAGING---------------------
 int add_client(int fd, char*name, char* ip); //add a client struct to list
@@ -57,6 +66,7 @@ int add_client(int fd, char*name, char* ip); //add a client struct to list
 char* get_cname(int fd);  //get name from fd input
 int get_cfd(char* name);  //get fd from name input
 char * get_cip(int fd);    //get ip from fd input
+char * get_croomcode(int fd);
 
 void delete_client(int fd);               //removes a client struct from list
 void delete_client_name(char* key, int ban);  //removes based on name and add to b_list

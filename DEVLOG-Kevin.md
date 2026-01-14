@@ -49,3 +49,8 @@ Experimenting with approaches to do private chats
 
 ### 2024-01-12 - Cleanup II
 Made server helper bigger, and fixed ban which was broken
+
+### 2024-01-13 - Cleanup III & Rooms
+- Fixed bugs from italicize formatting (only works if supported by txt edit)
+- Fixed undefined reference errors from how .h file was formatted, deleted server.h
+- Organized server_helper.h file

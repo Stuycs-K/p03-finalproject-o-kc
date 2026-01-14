@@ -1,5 +1,6 @@
 #include "server_helper.h"
 
+//NETWORK-----------------------------
 void recv_respond(int client_socket) {
   char chat[SIZE];
   memset(chat, 0, SIZE);
@@ -29,6 +30,7 @@ void recv_respond(int client_socket) {
 }
 
 void whisper(char * name_chat, int cs, char * chat){
+
     char * pos = chat + 9; //go to named portion
     char * name = strsep( & pos, " ");
     header(name_chat, cs, pos, "whispers");
@@ -41,9 +43,11 @@ void header(char * name_chat, int cs, char * chat, char * addon) {
 }
 
 void sender(int fd, int cs, char * name_chat) {
+  if (same_room(fd, cs)){
   if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
     delete_client(fd);
   }
+}
 }
 
 void listener(int listen_socket) {
@@ -102,6 +106,28 @@ int recv_name(int fd, char * name, char * ip) {
   return bytes;
 }
 
+//TEAM MANAGING---------------------
+int add_room(char * code) {
+  for (int i = 0; i < 100; i++) {
+    if (!room_codes[i].active) {
+      strncpy(room_codes[i].code, code, 49);
+      room_codes[i].code[49] = '\0';
+      room_codes[i].active = 1;
+      return i;
+    }
+  }
+  return -1;
+}  //default is lobby
+
+int same_room(int fd1, int fd2){
+  if (strcmp(get_croomcode(fd1), get_croomcode(fd2))){
+     return 1;
+  }
+  return 0;
+}
+
+
+//CLIENT MANAGING---------------------
 int add_client(int fd, char * name, char * ip) {
   for (int i = 0; i < 100; i++) {
     if (!clients[i].active) {
@@ -140,6 +166,15 @@ char * get_cip(int fd) {
   for (int i = 0; i < 100; i++) {
     if (clients[i].active && clients[i].fd == fd) {
       return clients[i].ip;
+    }
+  }
+  return NULL;
+}
+
+char * get_croomcode(int fd){
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && clients[i].fd == fd) {
+      return clients[i].room_code;
     }
   }
   return NULL;
@@ -186,6 +221,7 @@ int new_maxfd(int old_max) {
   return max;
 }
 
+//BAN MANAGING-------------------------
 int add_banned(char * ip) {
   for (int i = 0; i < 100; i++) {
     if (!blacklist[i].active) {
@@ -210,6 +246,8 @@ int is_banned(char * ip) {
 void initialize_c() {
   for (int i = 0; i < 100; i++) {
     clients[i].active = 0;
+    strncpy(clients[i].room_code, "lobby", 5);
+    clients[i].room_code[5] = '\0';
   }
 }
 
@@ -219,6 +257,7 @@ void initialize_b() {
   }
 }
 
+//UI-----------------------------------
 void user_interface() {
   static char special_store[50]; //when special status is activated, this emulates reading a string
   static int pos = 0;
@@ -283,4 +322,8 @@ void parse_helper(int * pos, char * special_store, char * modname) {
     special_store[*pos] = '\0';
     status(modname, special_store);
   }
+}
+
+int is_command(){
+  return 0;
 }
