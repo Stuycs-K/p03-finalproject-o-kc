@@ -50,6 +50,7 @@ int recv_name(int fd, char * name, char * ip);
 //TEAM MANAGING
 char* teams[100];
 
+
 //CLIENT MANAGING---------------------
 int add_client(int fd, char*name, char* ip); //add a client struct to list
 

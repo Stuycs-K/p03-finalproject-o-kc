@@ -245,14 +245,14 @@ void new_status(int mode, char * modname, int* pos, char*special_store) {
   memset(special_store, 0, 50);
   werase(input_win);
   box(input_win, 0, 0);
-  mvwprintw(input_win, 1, strlen(modname), "%s : ", modname);
+  mvwprintw(input_win, 1, 1, "%s : ", modname);
   wrefresh(input_win);
 }
 
 void status(char * modname, char*special_store) {
   werase(input_win);
   box(input_win, 0, 0);
-  mvwprintw(input_win, 1, strlen(modname), "%s : %s", modname, special_store);
+  mvwprintw(input_win, 1, 1, "%s : %s", modname, special_store);
   wrefresh(input_win);
 }
 

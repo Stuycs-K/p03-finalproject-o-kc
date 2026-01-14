@@ -25,7 +25,9 @@ int main(int argc, char * argv[]) {
   cbreak();
   noecho();
   while (1) {
-    mvwprintw(input_win, 1, 1, "> ");
+    if (!special_status){
+      mvwprintw(input_win, 1, 1, "> ");
+    }
     wrefresh(input_win);
 
     FD_ZERO( & read_sds);
