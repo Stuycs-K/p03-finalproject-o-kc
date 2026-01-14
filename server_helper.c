@@ -61,7 +61,7 @@ void listener(int listen_socket) {
       close(client_socket);
     } else {
       char name[50];
-      if (recvname(client_socket, name, client_ip)) {
+      if (recv_name(client_socket, name, client_ip)) {
         add_client(client_socket, name, client_ip); //add
         FD_SET(client_socket, & master_sds);
       } else {
@@ -94,7 +94,7 @@ int ip_convert_check(char * ip, struct sockaddr_storage client_addr) {
   return is_banned(ip);
 }
 
-int recvname(int fd, char * name, char * ip) {
+int recv_name(int fd, char * name, char * ip) {
   int bytes = recv(fd, name, 49, 0); //get name
   if (bytes > 0) {
     name[bytes] = '\0';
