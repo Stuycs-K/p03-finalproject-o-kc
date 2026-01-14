@@ -20,6 +20,10 @@ void recv_respond(int client_socket) {
     whisper(name_chat, client_socket, chat);
     return;
   }
+  else if (!strncmp(chat, "/join ", 5) && bytes >= 8){
+
+    return;
+  }
 
   header(name_chat, client_socket, chat, "");
   for (int fd = 0; fd <= maxfd; fd++) {
@@ -107,17 +111,7 @@ int recv_name(int fd, char * name, char * ip) {
 }
 
 //TEAM MANAGING---------------------
-int add_room(char * code) {
-  for (int i = 0; i < 100; i++) {
-    if (!room_codes[i].active) {
-      strncpy(room_codes[i].code, code, 49);
-      room_codes[i].code[49] = '\0';
-      room_codes[i].active = 1;
-      return i;
-    }
-  }
-  return -1;
-}  //default is lobby
+//default is lobby
 
 int same_room(int fd1, int fd2){
   if (strcmp(get_croomcode(fd1), get_croomcode(fd2))){
@@ -126,6 +120,10 @@ int same_room(int fd1, int fd2){
   return 0;
 }
 
+void join_room(int cs, char* chat){
+   char* code = strsep(chat, " ");
+   set_croomcode(cs, char* code);
+}
 
 //CLIENT MANAGING---------------------
 int add_client(int fd, char * name, char * ip) {
@@ -178,6 +176,15 @@ char * get_croomcode(int fd){
     }
   }
   return NULL;
+}
+
+void set_croomcode(int fd, char* code){
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active && clients[i].fd == fd) {
+      strncpy(clients[i].room_code, code, 49);
+      clients[i].room_code[49] = '\0';
+    }
+  }
 }
 
 void delete_client(int fd) {

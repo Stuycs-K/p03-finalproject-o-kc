@@ -1,6 +1,7 @@
 #include "server_helper.h"
 struct timeval tv;
 int maxfd = 0;
+struct room room_codes[100];
 struct clientinfo clients[100];
 int client_count = 0;
 fd_set master_sds;
