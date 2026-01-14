@@ -15,16 +15,19 @@ void recv_respond(int client_socket) {
   chat[bytes] = '\0';
 
   char name_chat[SIZE + 60];
-        wprintw(chat_win, "doing stuff");
+  wprintw(chat_win, "WHATY\n");
+      wrefresh(chat_win);
   if (!strncmp(chat, "/whisper ", 9) && bytes >= 12) {
     whisper(name_chat, client_socket, chat);
     return;
   }
   else if (!strncmp(chat, "/join ", 5) && bytes >= 8){
-
+    wprintw(chat_win, "WHATY\n");
+    wrefresh(chat_win);
     return;
   }
-        wprintw(chat_win, "doing stuff");
+      wprintw(chat_win, "WHATY\n");
+          wrefresh(chat_win);
   header(name_chat, client_socket, chat, "");
   for (int fd = 0; fd <= maxfd; fd++) {
           wprintw(chat_win, "doing stuff");
