@@ -50,7 +50,10 @@ Experimenting with approaches to do private chats
 ### 2024-01-12 - Cleanup II
 Made server helper bigger, and fixed ban which was broken
 
-### 2024-01-13 - Cleanup III & Rooms
+### 2024-01-13 - Cleanup III & Rooms  
 - Fixed bugs from italicize formatting (only works if supported by txt edit)
 - Fixed undefined reference errors from how .h file was formatted, deleted server.h
 - Organized server_helper.h file
+- Server can decide how to handle incoming messages based on the 'room' of the client
+    -PRIV CHAT UPDATE: Rooms are easier than teams, and whisper already exists in the lobby
+            -Assuming nonspace names, whisper can have multiple targets, or even a optional final tag to target anyone of a chosen team ( if incorporated )
