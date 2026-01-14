@@ -58,15 +58,19 @@ void client_get(int ss) {
   }
   otherchat[bytes] = '\0';
 
-  char* filter = otherchat;
-  strsep(&filter, " ");
-  if(strncmp(filter, "whispers",  8)){
+  char copy[SIZE + 60];
+  strncpy(copy, otherchat, SIZE + 60);  //to not modify otherchat
+  char* tag = copy;
+
+  strsep(&tag, " ");
+  if(!strncmp(tag, "whispers:",  9)){
      attron(A_ITALIC);
   }
   wprintw(chat_win, "%s\n", otherchat);
   attroff(A_ITALIC);
   wrefresh(chat_win);
 }
+
 
 int get_input(int ss){
   char input[SIZE];
