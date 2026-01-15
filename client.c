@@ -37,6 +37,8 @@ int main(int argc, char * argv[]) {
   FD_SET(STDIN_FILENO, & master_sds);
 
   ncurses( & chat_win, & input_win, & status_win);
+  mvwprintw(status_win, 1, 1, "ROOM [%s]",room_code);
+  wrefresh(status_win);
   while (1) {
     FD_ZERO( & read_sds);
     read_sds = master_sds;
@@ -47,10 +49,6 @@ int main(int argc, char * argv[]) {
 
     if (FD_ISSET(STDIN_FILENO, &read_sds)) {
       if (get_input(server_socket)) break;
-      werase(status_win);
-      box(status_win, 0, 0);
-      mvwprintw(status_win, 1, 1, "ROOM [%s]",room_code);
-      wrefresh(status_win);
     }
   }
   endwin();
@@ -112,6 +110,11 @@ int get_input(int ss){
       strsep(&temp, " ");
       strcpy(room_code, temp);
       room_code[49] = '\0';
+
+      werase(status_win);
+      box(status_win, 0, 0);
+      mvwprintw(status_win, 1, 1, "ROOM [%s]",room_code);
+      wrefresh(status_win);
   }
 
   wprintw(chat_win, "%s: %s\n", NAME, input);
