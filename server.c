@@ -9,6 +9,7 @@ fd_set read_sds;
 fd_set write_sds;
 WINDOW * chat_win;
 WINDOW * input_win;
+WINDOW * status_win;
 int special_status = 0;
 struct banned blacklist[100];
 int main(int argc, char * argv[]) {
@@ -22,7 +23,7 @@ int main(int argc, char * argv[]) {
 
   FD_ZERO( & master_sds);
 
-  ncurses( & chat_win, & input_win);
+  ncurses( & chat_win, & input_win, & status_win);
   cbreak();
   noecho();
   while (1) {

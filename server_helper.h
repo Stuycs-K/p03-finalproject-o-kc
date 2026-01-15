@@ -42,6 +42,7 @@ extern int maxfd;
 //UI
 extern WINDOW * chat_win;
 extern WINDOW * input_win;
+extern WINDOW * status_win;
 extern int special_status;
 
 
@@ -59,6 +60,7 @@ extern int recv_name(int fd, char * name, char * ip);
 //TEAM MANAGING---------------------
 extern int add_room(char * code);
 extern int same_room(int fd1, int fd2);
+void join_room(int cs, char* chat);
 
 //CLIENT MANAGING---------------------
 extern int add_client(int fd, char*name, char* ip); //add a client struct to list

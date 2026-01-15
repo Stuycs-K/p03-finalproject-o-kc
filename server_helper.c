@@ -7,6 +7,8 @@ void recv_respond(int client_socket) {
 
   int bytes = recv(client_socket, chat, SIZE - 1, 0); //recieve
 
+  fprintf(stderr, "Received from fd=%d: '%s' (bytes=%d)\n", client_socket, chat, bytes);
+
   if (bytes <= 0) {
     delete_client(client_socket);
     return;
@@ -15,24 +17,22 @@ void recv_respond(int client_socket) {
   chat[bytes] = '\0';
 
   char name_chat[SIZE + 60];
-  wprintw(chat_win, "WHATY\n");
-      wrefresh(chat_win);
+
   if (!strncmp(chat, "/whisper ", 9) && bytes >= 12) {
     whisper(name_chat, client_socket, chat);
     return;
   }
   else if (!strncmp(chat, "/join ", 5) && bytes >= 8){
-    wprintw(chat_win, "WHATY\n");
-    wrefresh(chat_win);
+    fprintf(stderr, "JOIN command detected: '%s' (bytes=%d)\n", chat, bytes);
+    join_room(client_socket, chat);
     return;
   }
-      wprintw(chat_win, "WHATY\n");
-          wrefresh(chat_win);
+
   header(name_chat, client_socket, chat, "");
   for (int fd = 0; fd <= maxfd; fd++) {
-          wprintw(chat_win, "doing stuff");
+
     if (FD_ISSET(fd, & write_sds) && fd != client_socket) {
-      wprintw(chat_win, "doing stuff");
+
       sender(fd, client_socket, name_chat);
     }
   }
@@ -76,7 +76,6 @@ void listener(int listen_socket) {
       char name[50];
       if (recv_name(client_socket, name, client_ip)) {
         add_client(client_socket, name, client_ip); //add
-        FD_SET(client_socket, & master_sds);
       } else {
         close(client_socket); //if name recv fails, then socket is freed before it even gets stored
       }
@@ -119,19 +118,34 @@ int recv_name(int fd, char * name, char * ip) {
 //default is lobby
 
 int same_room(int fd1, int fd2){
-  if (!strcmp(get_croomcode(fd1), get_croomcode(fd2))){
+  char* room1 = get_croomcode(fd1);
+  char* room2 = get_croomcode(fd2);
+
+  // Debug output
+  fprintf(stderr, "Comparing rooms: fd1=%d room='%s' vs fd2=%d room='%s'\n",
+          fd1, room1 ? room1 : "NULL", fd2, room2 ? room2 : "NULL");
+
+  if (!strcmp(room1, room2)){
      return 1;
   }
   return 0;
 }
 
 void join_room(int cs, char* chat){
-   strsep(&chat, " ");
-   set_croomcode(cs, chat);
+  char* room_name = chat;
+  strsep(&room_name, " ");  // Skip "/join"
+
+  fprintf(stderr, "Room name after strsep: '%s'\n", room_name ? room_name : "NULL");
+
+  if (room_name != NULL) {
+      set_croomcode(cs, room_name);
+      fprintf(stderr, "Set fd=%d to room '%s'\n", cs, room_name);
+  }
 }
 
 //CLIENT MANAGING---------------------
 int add_client(int fd, char * name, char * ip) {
+  FD_SET(fd, & master_sds);
   for (int i = 0; i < 100; i++) {
     if (!clients[i].active) {
       clients[i].fd = fd;

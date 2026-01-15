@@ -13,10 +13,14 @@ int main(int argc, char * argv[]) {
 
   memset(NAME, 0, 50);
 
+
   printf("Make a name (no spaces, use '_'): \n");
   fgets(NAME, 49, stdin);
   NAME[strcspn(NAME, "\n")] = '\0';
 
+  memset(room_code, 0, 50);
+  strcpy(room_code, "lobby");
+  room_code[49] = '\0';
 
   int server_socket = client_tcp_handshake(IP);
 
@@ -32,7 +36,7 @@ int main(int argc, char * argv[]) {
   FD_SET(server_socket, & master_sds);
   FD_SET(STDIN_FILENO, & master_sds);
 
-  ncurses( & chat_win, & input_win);
+  ncurses( & chat_win, & input_win, & status_win);
   while (1) {
     FD_ZERO( & read_sds);
     read_sds = master_sds;
@@ -43,6 +47,10 @@ int main(int argc, char * argv[]) {
 
     if (FD_ISSET(STDIN_FILENO, &read_sds)) {
       if (get_input(server_socket)) break;
+      werase(status_win);
+      box(status_win, 0, 0);
+      mvwprintw(status_win, 1, 1, "ROOM [%s]",room_code);
+      wrefresh(status_win);
     }
   }
   endwin();
@@ -60,6 +68,14 @@ void client_get(int ss) {
   }
   otherchat[bytes] = '\0';
 
+  check_whisper(otherchat);
+
+  wprintw(chat_win, "%s\n", otherchat);
+  attroff(A_ITALIC);
+  wrefresh(chat_win);
+}
+
+int check_whisper(char* otherchat){
   char copy[SIZE + 60];
   strncpy(copy, otherchat, SIZE + 60);  //to not modify otherchat
   char* tag = copy;
@@ -67,12 +83,10 @@ void client_get(int ss) {
   strsep(&tag, " ");
   if(!strncmp(tag, "whispers:",  9)){
      attron(A_ITALIC);
+     return 1;
   }
-  wprintw(chat_win, "%s\n", otherchat);
-  attroff(A_ITALIC);
-  wrefresh(chat_win);
+  return 0;
 }
-
 
 int get_input(int ss){
   char input[SIZE];
@@ -89,7 +103,16 @@ int get_input(int ss){
 
   if (strcmp(input, "q") == 0) return 1; //quit
 
+
   input[strcspn(input, "\n")] = '\0';
+  if (!strncmp(input, "/join ", 6)){
+      char copy[SIZE];
+      strncpy(copy, input, SIZE - 1);
+      char* temp = copy;
+      strsep(&temp, " ");
+      strcpy(room_code, temp);
+      room_code[49] = '\0';
+  }
 
   wprintw(chat_win, "%s: %s\n", NAME, input);
   wrefresh(chat_win);

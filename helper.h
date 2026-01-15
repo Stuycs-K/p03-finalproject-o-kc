@@ -26,7 +26,7 @@ int server_tcp_handshake(int ls, struct sockaddr_storage * client_addr);
 int client_tcp_handshake(char * server_ip);
 
 
-void ncurses(WINDOW** chat_win, WINDOW** input_win);
+void ncurses(WINDOW** chat_win, WINDOW** input_win, WINDOW** status_win);
 
 int chatterbox(WINDOW ** chat_win, WINDOW ** input_win, int ss);  //not practicable. TEST
 #endif
