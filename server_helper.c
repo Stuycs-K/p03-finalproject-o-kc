@@ -63,6 +63,13 @@ void loop_all(char* name_chat, int cs){
   }
 }
 
+void loop_status(char* name_chat, int cs){
+  for (int fd = 0; fd <= maxfd; fd++) {
+    if (FD_ISSET(fd, & write_sds) && fd != cs && !strcmp(get_croomcode(cs), "lobby")) {
+      sender(fd, cs, name_chat);
+    }
+  }
+}
 
 //----------------------------------
 void listener(int listen_socket) {
