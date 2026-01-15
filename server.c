@@ -16,7 +16,8 @@ int main(int argc, char * argv[]) {
   tv.tv_sec = 1;
   tv.tv_usec = 0; //controls length that select will block (not using NULL since server may need actions independent of client)
 
-  initialize_c();
+  init_client();
+  init_blacklist();
 
   int listen_socket = makeServer();
   maxfd = listen_socket;

@@ -51,6 +51,7 @@ extern void recv_respond(int client_socket);   //responds to an active client so
 extern void whisper(char * name_chat, int cs, char * chat);
 extern void header(char* name_chat, int cs, char* chat, char*addon);  //formats a chat message to send based on the sent input
 extern void sender(int fd, int cs, char* name_chat);   //sends a chat message to a fd, with checks
+extern void loop_all(char* name_chat, int cs);
 
 extern void listener(int listen_socket);        //handles incoming fds
 extern int ip_convert_check(char* ip, struct sockaddr_storage client_addr);
@@ -81,8 +82,8 @@ extern int add_banned(char * ip);  //add a banned ip to list
 extern int is_banned(char * ip);   //checks if ip is banned
 extern void remove_banned(char* ip); //experimental
 
-extern void initialize_c();
-extern void initialize_b();
+extern void init_client();
+extern void init_blacklist();
 
 //UI-----------------------------------
 extern void user_interface();

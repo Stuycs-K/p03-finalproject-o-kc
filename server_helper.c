@@ -7,8 +7,6 @@ void recv_respond(int client_socket) {
 
   int bytes = recv(client_socket, chat, SIZE - 1, 0); //recieve
 
-  fprintf(stderr, "Received from fd=%d: '%s' (bytes=%d)\n", client_socket, chat, bytes);
-
   if (bytes <= 0) {
     delete_client(client_socket);
     return;
@@ -21,44 +19,52 @@ void recv_respond(int client_socket) {
   if (!strncmp(chat, "/whisper ", 9) && bytes >= 12) {
     whisper(name_chat, client_socket, chat);
     return;
-  }
-  else if (!strncmp(chat, "/join ", 5) && bytes >= 8){
-    fprintf(stderr, "JOIN command detected: '%s' (bytes=%d)\n", chat, bytes);
-    join_room(client_socket, chat);
-    return;
+  } else if (!strncmp(chat, "/join ", 5) && bytes >= 8) {
+      join_room(client_socket, chat);
+      header(name_chat, client_socket, chat, "has joined the room -- ");
+    }
+    else if  (!strncmp(chat, "/pjoin ",6) && bytes >= 9){
+      join_room(client_socket, chat);
+      header(name_chat, client_socket, "!", "has left this room");
+    }
+    else{
+      header(name_chat, client_socket, chat, ":");
+    }
+
+    loop_all(name_chat, client_socket);
   }
 
-  header(name_chat, client_socket, chat, "");
+
+void whisper(char * name_chat, int cs, char * chat) {
+
+  char * pos = chat + 9; //go to named portion
+  char * name = strsep( & pos, " ");
+  header(name_chat, cs, pos, "whispers");
+  int wfd = get_cfd(name);
+  sender(wfd, cs, name_chat);
+}
+
+void header(char * name_chat, int cs, char * chat, char * addon) {
+  snprintf(name_chat, SIZE + 60, "%s %s %s", get_cname(cs), addon, chat);
+}
+
+void sender(int fd, int cs, char * name_chat) {
+    if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
+      delete_client(fd);
+    }
+
+}
+
+void loop_all(char* name_chat, int cs){
   for (int fd = 0; fd <= maxfd; fd++) {
-
-    if (FD_ISSET(fd, & write_sds) && fd != client_socket) {
-
-      sender(fd, client_socket, name_chat);
+    if (FD_ISSET(fd, & write_sds) && fd != cs && same_room(fd, cs)) {
+      sender(fd, cs, name_chat);
     }
   }
 }
 
-void whisper(char * name_chat, int cs, char * chat){
 
-    char * pos = chat + 9; //go to named portion
-    char * name = strsep( & pos, " ");
-    header(name_chat, cs, pos, "whispers");
-    int wfd = get_cfd(name);
-    sender(wfd, cs, name_chat);
-}
-
-void header(char * name_chat, int cs, char * chat, char * addon) {
-  snprintf(name_chat, SIZE + 60, "%s %s: %s", get_cname(cs), addon, chat);
-}
-
-void sender(int fd, int cs, char * name_chat) {
-  if (same_room(fd, cs)){
-  if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
-    delete_client(fd);
-  }
-}
-}
-
+//----------------------------------
 void listener(int listen_socket) {
   int queue = select(maxfd + 1, & read_sds, NULL, NULL, & tv);
   if (FD_ISSET(listen_socket, & read_sds)) {
@@ -117,29 +123,20 @@ int recv_name(int fd, char * name, char * ip) {
 //TEAM MANAGING---------------------
 //default is lobby
 
-int same_room(int fd1, int fd2){
-  char* room1 = get_croomcode(fd1);
-  char* room2 = get_croomcode(fd2);
-
-  // Debug output
-  fprintf(stderr, "Comparing rooms: fd1=%d room='%s' vs fd2=%d room='%s'\n",
-          fd1, room1 ? room1 : "NULL", fd2, room2 ? room2 : "NULL");
-
-  if (!strcmp(room1, room2)){
-     return 1;
+int same_room(int fd1, int fd2) {
+  if (!strcmp(get_croomcode(fd1), get_croomcode(fd2))) {
+    return 1;
   }
   return 0;
 }
 
-void join_room(int cs, char* chat){
-  char* room_name = chat;
-  strsep(&room_name, " ");  // Skip "/join"
-
-  fprintf(stderr, "Room name after strsep: '%s'\n", room_name ? room_name : "NULL");
+void join_room(int cs, char * chat) {
+  char * room_name = chat;
+  strsep( & room_name, " "); //changes chat position too
 
   if (room_name != NULL) {
-      set_croomcode(cs, room_name);
-      fprintf(stderr, "Set fd=%d to room '%s'\n", cs, room_name);
+    set_croomcode(cs, room_name);
+
   }
 }
 
@@ -149,9 +146,9 @@ int add_client(int fd, char * name, char * ip) {
   for (int i = 0; i < 100; i++) {
     if (!clients[i].active) {
       clients[i].fd = fd;
-      strncpy(clients[i].name, name, 49);
+      strncpy(clients[i].name, name, 49);    //copy name into name
 
-      strncpy(clients[i].ip, ip, 16);
+      strncpy(clients[i].ip, ip, 16);        //copy ip into ip
       clients[i].ip[INET_ADDRSTRLEN - 1] = '\0';
       clients[i].active = 1;
       client_count++;
@@ -188,7 +185,7 @@ char * get_cip(int fd) {
   return NULL;
 }
 
-char * get_croomcode(int fd){
+char * get_croomcode(int fd) {
   for (int i = 0; i < 100; i++) {
     if (clients[i].active && clients[i].fd == fd) {
       return clients[i].room_code;
@@ -197,10 +194,10 @@ char * get_croomcode(int fd){
   return NULL;
 }
 
-int set_croomcode(int fd, char* code){
+int set_croomcode(int fd, char * code) {
   for (int i = 0; i < 100; i++) {
     if (clients[i].active && clients[i].fd == fd) {
-      strncpy(clients[i].room_code, code, 49);
+      strncpy(clients[i].room_code, code, 49);  //copy roomcode into roomcode
       clients[i].room_code[49] = '\0';
       return i;
     }
@@ -253,7 +250,7 @@ int new_maxfd(int old_max) {
 int add_banned(char * ip) {
   for (int i = 0; i < 100; i++) {
     if (!blacklist[i].active) {
-      strncpy(blacklist[i].ip, ip, 16);
+      strncpy(blacklist[i].ip, ip, 16);           //copy blacklisted ip into ip
       blacklist[i].ip[INET_ADDRSTRLEN - 1] = '\0';
       blacklist[i].active = 1;
       return i;
@@ -262,7 +259,7 @@ int add_banned(char * ip) {
   return -1;
 }
 
-void remove_banned(char* ip) {
+void remove_banned(char * ip) {
   for (int i = 0; i < 100; i++) {
     if (blacklist[i].active && !strcmp(ip, blacklist[i].ip)) {
       blacklist[i].active = 0;
@@ -279,15 +276,15 @@ int is_banned(char * ip) {
   return 0;
 }
 
-void initialize_c() {
+void init_client() {
   for (int i = 0; i < 100; i++) {
     clients[i].active = 0;
-    strncpy(clients[i].room_code, "lobby", 6);
+    strncpy(clients[i].room_code, "lobby", 6);   //copies lobby into roomcode
     clients[i].room_code[5] = '\0';
   }
 }
 
-void initialize_b() {
+void init_blacklist() {
   for (int i = 0; i < 100; i++) {
     blacklist[i].active = 0;
   }
@@ -302,24 +299,23 @@ void user_interface() {
     int c = wgetch(input_win);
 
     if (c == 98) { //b for kick - ENTER kick mode
-      new_status(1, "kick", &pos, special_store);
-    } else if (c == 66){ //B for Ban
-      new_status(2, "ban", &pos, special_store);
-      }else if (c == 113) { //Q for exit
+      new_status(1, "kick", & pos, special_store);
+    } else if (c == 66) { //B for Ban
+      new_status(2, "ban", & pos, special_store);
+    } else if (c == 113) { //Q for exit
       endwin();
       exit(1);
     }
   } else if (special_status == 1) { // since select is valid EVEN WHEN theres only one character in stdin
     parse_helper( & pos, special_store, "kick");
-  }
-  else if (special_status == 2){
+  } else if (special_status == 2) {
     parse_helper( & pos, special_store, "ban");
   }
 }
 
-void new_status(int mode, char * modname, int* pos, char*special_store) {
+void new_status(int mode, char * modname, int * pos, char * special_store) {
   special_status = mode;
-  *pos = 0;
+  * pos = 0;
   memset(special_store, 0, 50);
   werase(input_win);
   box(input_win, 0, 0);
@@ -327,7 +323,7 @@ void new_status(int mode, char * modname, int* pos, char*special_store) {
   wrefresh(input_win);
 }
 
-void status(char * modname, char*special_store) {
+void status(char * modname, char * special_store) {
   werase(input_win);
   box(input_win, 0, 0);
   mvwprintw(input_win, 1, 1, "%s : %s", modname, special_store);
@@ -341,28 +337,28 @@ void parse_helper(int * pos, char * special_store, char * modname) {
     special_store[ * pos] = '\0';
     if (!strcmp(special_store, "return")) {
       special_status = 0;
-      *pos = 0; //reset "string reading" operation
+      * pos = 0; //reset "string reading" operation
     } else {
       delete_client_name(special_store, special_status - 1);
-      *pos = 0;
+      * pos = 0;
     }
     werase(input_win);
     box(input_win, 0, 0);
     wrefresh(input_win);
   } else if (c == KEY_BACKSPACE || c == 127 || c == 8) { // Backspace may be differennt
-    if (*pos > 0) {
-      (*pos)--;
+    if ( * pos > 0) {
+      ( * pos) --;
       special_store[ * pos] = '\0';
       status(modname, special_store);
     }
   } else if ( * pos < 49 && isprint(c)) { //fill buff with name (should contain all valid characters)
     special_store[ * pos] = c;
-    (*pos)++;
-    special_store[*pos] = '\0';
+    ( * pos) ++;
+    special_store[ * pos] = '\0';
     status(modname, special_store);
   }
 }
 
-int is_command(){
+int is_command() {
   return 0;
 }
