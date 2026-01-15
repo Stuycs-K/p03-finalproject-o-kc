@@ -57,3 +57,8 @@ Made server helper bigger, and fixed ban which was broken
 - Server can decide how to handle incoming messages based on the 'room' of the client
     -PRIV CHAT UPDATE: Rooms are easier than teams, and whisper already exists in the lobby
             -Assuming nonspace names, whisper can have multiple targets, or even a optional final tag to target anyone of a chosen team ( if incorporated )
+
+### 2024-01-14 - Functional rooms
+- clients can only communicate within their rooms(a team)
+- later, plan to use another tag for talking in lobby simultaneously (eg. to invite people into a room)
+- cleaned server a little, kick and ban actually display differently
