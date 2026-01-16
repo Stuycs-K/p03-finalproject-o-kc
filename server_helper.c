@@ -64,14 +64,14 @@ void whisper(char * name_chat, int cs, char * chat) {
   char * name = strsep( & pos, " ");
   header(name_chat, cs, pos, "whispers");
   int wfd = get_cfd(name);
-  sender(wfd, cs, name_chat);
+  sender(wfd, name_chat);
 }
 
 void header(char * name_chat, int cs, char * chat, char * addon) {
   snprintf(name_chat, SIZE + 60, "%s %s %s", get_cname(cs), addon, chat);
 }
 
-void sender(int fd, int cs, char * name_chat) {
+void sender(int fd, char * name_chat) {
     if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
       delete_client(fd);
     }
@@ -81,7 +81,7 @@ void sender(int fd, int cs, char * name_chat) {
 void loop_all(char* name_chat, int cs){
   for (int fd = 0; fd <= maxfd; fd++) {
     if (FD_ISSET(fd, & write_sds) && fd != cs && same_room(fd, cs)) {
-      sender(fd, cs, name_chat);
+      sender(fd, name_chat);
     }
   }
 }
@@ -89,7 +89,7 @@ void loop_all(char* name_chat, int cs){
 void loop_join(char* name_chat, int cs, char* old_room){
   for (int fd = 0; fd <= maxfd; fd++) {
     if (FD_ISSET(fd, & write_sds) && fd != cs && !strcmp(get_croomcode(fd), old_room)) {
-      sender(fd, cs, name_chat);
+      sender(fd, name_chat);
     }
   }
 }
@@ -331,7 +331,10 @@ void user_interface() {
       new_status(1, "kick", & pos, special_store);
     } else if (c == 66) { //B for Ban
       new_status(2, "ban", & pos, special_store);
-    } else if (c == 113) { //Q for exit
+    } else if (c == 116){
+      new_status(3, "type", & pos, special_store);
+    }
+    else if (c == 113) { //Q for exit
       endwin();
       exit(1);
     }
@@ -339,6 +342,8 @@ void user_interface() {
     parse_helper( & pos, special_store, "kick");
   } else if (special_status == 2) {
     parse_helper( & pos, special_store, "ban");
+  } else if (special_status == 3) {
+    parse_helper( & pos, special_store, "type");
   }
 }
 
@@ -368,7 +373,7 @@ void parse_helper(int * pos, char * special_store, char * modname) {
       special_status = 0;
       * pos = 0; //reset "string reading" operation
     } else {
-      delete_client_name(special_store, special_status - 1);
+      check_command(special_store);
       * pos = 0;
     }
     werase(input_win);
@@ -388,6 +393,12 @@ void parse_helper(int * pos, char * special_store, char * modname) {
   }
 }
 
-int is_command() {
-  return 0;
+void check_command(char* special_store) {
+  if (special_status == 1 || special_status == 2){
+    delete_client_name(special_store, special_status - 1);
+  } else if (special_status == 3){
+    char name_chat[60 + 60];
+    snprintf(name_chat, 60 + 60, "server msg: %s", special_store);
+    loop_all(name_chat, -1); //the -1 is filler
+  }
 }

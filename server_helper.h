@@ -50,7 +50,7 @@ extern int special_status;
 extern void recv_respond(int client_socket);   //responds to an active client socket
 extern void whisper(char * name_chat, int cs, char * chat);
 extern void header(char* name_chat, int cs, char* chat, char*addon);  //formats a chat message to send based on the sent input
-extern void sender(int fd, int cs, char* name_chat);   //sends a chat message to a fd, with checks
+extern void sender(int fd, char* name_chat);   //sends a chat message to a fd, with checks
 extern void loop_all(char* name_chat, int cs);
 extern void loop_join(char* name_chat, int cs, char* old_room);
 
@@ -91,4 +91,5 @@ extern void user_interface();
 extern void new_status(int mode, char * modname, int* pos, char*special_store);
 extern void status(char * modname, char*special_store);
 extern void parse_helper(int * pos, char * special_store, char * modname);
+extern void check_command(char* special_store)
 #endif
