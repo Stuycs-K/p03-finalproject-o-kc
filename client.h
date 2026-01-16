@@ -20,4 +20,6 @@ void client_get(int ss);
 int check_whisper(char* otherchat);
 
 int get_input(int ss);
+
+void clean_all();
 #endif

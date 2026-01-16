@@ -12,16 +12,9 @@ WINDOW * input_win;
 WINDOW * status_win;
 int special_status = 0;
 struct banned blacklist[100];
-void sighandler(int signo) {
+static void sighandler(int signo) {
   if (signo == SIGINT || signo == SIGTERM) {
-    for (int i = 0; i < 100; i++) {
-      if (clients[i].active) {
-        close(clients[i].fd);
-      }
-    }
-    endwin();
-    printf("server forcibly closed without q\n");
-    exit(0);
+    clean_all();
   }
 }
 int main(int argc, char * argv[]) {

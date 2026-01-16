@@ -3,11 +3,9 @@
 
 struct timeval tv;
 
-void sighandler(int signo) {
+static void sighandler(int signo) {
   if (signo == SIGINT || signo == SIGTERM) {
-    endwin();
-    printf("client forcibly closed without q\n");
-    exit(0);
+   clean_all();
   }
 }
 
@@ -37,7 +35,7 @@ int main(int argc, char * argv[]) {
 
   if(send(server_socket, NAME, strlen(NAME) + 1, 0) <= 0) { //sends name
     perror("cant send name");
-    exit(1);
+    clean_all();
   }
 
 
@@ -133,8 +131,7 @@ int get_input(int ss){
 //  wprintw(chat_win, "asdasdads\n");
 //  wrefresh(chat_win);
   if (send(ss, input, strlen(input) + 1, 0) <= 0) {
-    endwin();
-    exit(1);
+    clean_all();
   }
 
   werase(input_win); //clear input buff, including border
@@ -142,4 +139,9 @@ int get_input(int ss){
   wrefresh(input_win);
 
   return 0;
+}
+
+void clean_all(){
+  endwin();
+  exit(1);
 }

@@ -11,7 +11,7 @@ The client will have some control over how their messages are sent
 
 ### Instructions:
 
-INSTALL - SSH git@github.com:Stuycs-K/systemslab16-networking-o-kc.git
+INSTALL - SSH git@github.com:Stuycs-K/systemslab16-networking-o-kc.git (need key)
 COMPILE - make compile on terminal
 RUN - SERVER - make s
     - CLIENT - make c

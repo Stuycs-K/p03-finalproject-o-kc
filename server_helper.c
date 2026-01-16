@@ -20,34 +20,9 @@ void recv_respond(int client_socket) {
     whisper(name_chat, client_socket, chat);
     return;
   } else if (!strncmp(chat, "/join ", 5) && bytes >= 8) {
-    char old_room[50];
-    strncpy(old_room, get_croomcode(client_socket), 49);
-    old_room[49] = '\0';
-
-    char * temp = chat;
-    strsep( & temp, " ");
-    char new_room[50];
-    strncpy(new_room, temp, 49);
-    new_room[49] = '\0';
-    join_room(client_socket, chat);
-
-    header(name_chat, client_socket, new_room, "has joined the room --");
-    loop_join(name_chat, client_socket, old_room);
+    join_room(name_chat, client_socket, chat, 1);
   } else if (!strncmp(chat, "/pjoin ", 6) && bytes >= 9) {
-    char old_room[50];
-    strncpy(old_room, get_croomcode(client_socket), 49);
-    old_room[49] = '\0';
-
-    char * temp = chat;
-    strsep( & temp, " ");
-    char new_room[50];
-    strncpy(new_room, temp, 49);
-    new_room[49] = '\0';
-
-    join_room(client_socket, chat);
-
-    header(name_chat, client_socket, "!", "has left this room");
-    loop_join(name_chat, client_socket, old_room);
+    join_room(name_chat, client_socket, chat, 0);
   } else {
     header(name_chat, client_socket, chat, ":");
   }
@@ -159,13 +134,26 @@ int same_room(int fd1, int fd2) {
   return 0;
 }
 
-void join_room(int cs, char * chat) {
-  char * room_name = chat;
-  strsep( & room_name, " "); //changes chat position too
+void join_room(char* name_chat, int cs, char * chat, int i) {
 
-  if (room_name != NULL) {
-    set_croomcode(cs, room_name);
+    char old_room[50];
+    strncpy(old_room, get_croomcode(cs), 49);
+    old_room[49] = '\0';
+  char * temp = chat;
+  strsep( & temp, " ");  //changes temp position
+
+  char new_room[50];
+  strncpy(new_room, temp, 49); //organization
+  new_room[49] = '\0';
+
+  set_croomcode(cs, new_room);
+
+  if (i){
+      header(name_chat, cs, new_room, "has joined the room --");
+  } else{
+      header(name_chat, cs, "!", "has left this room");
   }
+  loop_join(name_chat, cs, old_room);
 }
 
 //CLIENT MANAGING---------------------
@@ -264,6 +252,17 @@ void delete_client_name(char * key, int ban) {
   }
 }
 
+void clean_all(){
+  for (int i = 0; i < 100; i++) {
+    if (clients[i].active) {
+      close(clients[i].fd);
+    }
+  }
+  endwin();
+  printf("server closed!\n");
+  exit(0);
+}
+
 int new_maxfd(int old_max) {
   int max = 0;
   for (int fd = 0; fd <= old_max; fd++) {
@@ -333,8 +332,7 @@ void user_interface() {
     } else if (c == 116) {
       new_status(3, "type", & pos, special_store);
     } else if (c == 113) { //Q for exit
-      endwin();
-      exit(1);
+      clean_all();
     }
   } else if (special_status == 1) { // since select is valid EVEN WHEN theres only one character in stdin
     parse_helper( & pos, special_store, "kick");

@@ -62,7 +62,7 @@ extern int recv_name(int fd, char * name, char * ip);
 //TEAM MANAGING---------------------
 extern int add_room(char * code);
 extern int same_room(int fd1, int fd2);
-void join_room(int cs, char* chat);
+extern void join_room(char* name_chat, int cs, char * chat, int i);
 
 //CLIENT MANAGING---------------------
 extern int add_client(int fd, char*name, char* ip); //add a client struct to list
@@ -76,6 +76,7 @@ extern int set_croomcode(int fd, char* code);
 
 extern void delete_client(int fd);               //removes a client struct from list
 extern void delete_client_name(char* key, int ban);  //removes based on name and add to b_list
+extern void clean_all();
 extern int new_maxfd(int old_max);  //updates the max_fd
 
 //BAN MANAGING-------------------------
