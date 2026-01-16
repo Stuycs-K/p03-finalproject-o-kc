@@ -12,7 +12,14 @@ WINDOW * input_win;
 WINDOW * status_win;
 int special_status = 0;
 struct banned blacklist[100];
+void sighandler(int signo) {
+  if (signo == SIGINT) {
+    endwin();   
+    exit(0);
+  }
+}
 int main(int argc, char * argv[]) {
+  signal(SIGINT, sighandler);
   tv.tv_sec = 1;
   tv.tv_usec = 0; //controls length that select will block (not using NULL since server may need actions independent of client)
 
