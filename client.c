@@ -2,7 +2,17 @@
 #include "client.h"
 
 struct timeval tv;
+
+void sighandler(int signo) {
+  if (signo == SIGINT || signo == SIGTERM) {
+    endwin();
+    printf("client forcibly closed without q\n");
+    exit(0);
+  }
+}
+
 int main(int argc, char * argv[]) {
+  signal(SIGINT, sighandler);
   tv.tv_sec = 1;
   tv.tv_usec = 0;
 
