@@ -44,6 +44,8 @@ void header(char * name_chat, int cs, char * chat, char * addon) {
 }
 
 void sender(int fd, char * name_chat) {
+  wprintw(chat_win, "%s\n", name_chat);
+  wrefresh(chat_win);
   if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
     delete_client(fd);
   }

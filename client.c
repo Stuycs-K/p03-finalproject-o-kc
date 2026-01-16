@@ -5,6 +5,7 @@ struct timeval tv;
 
 static void sighandler(int signo) {
   if (signo == SIGINT || signo == SIGTERM) {
+
    clean_all();
   }
 }
@@ -143,5 +144,6 @@ int get_input(int ss){
 
 void clean_all(){
   endwin();
+  printf("client closed!\n");
   exit(1);
 }

@@ -17,6 +17,12 @@ int makeServer() {
   if (clientd < 0) {
     exit(1);
   }
+  int yes = 1;
+  int sockOpt =  setsockopt(clientd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+  if (sockOpt < 0){
+    exit(1);
+  }
+
   if (bind(clientd, results -> ai_addr, results -> ai_addrlen) < 0){ //activate socket
     exit(1);
   }
