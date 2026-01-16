@@ -75,21 +75,22 @@ void listener(int listen_socket) {
     struct sockaddr_storage client_addr;
     int client_socket = server_tcp_handshake(listen_socket, & client_addr);
 
-    if (client_socket > maxfd) {
-      maxfd = client_socket;
-    }
-
-    char client_ip[INET_ADDRSTRLEN];
-    if (ip_convert_check(client_ip, client_addr)) {
-      close(client_socket);
-    } else {
-      char name[50];
-      if (recv_name(client_socket, name, client_ip)) {
-        add_client(client_socket, name, client_ip); //add
-      } else {
-        close(client_socket); //if name recv fails, then socket is freed before it even gets stored
+    queue--;
+    if (client_socket >= 0) {
+      if (client_socket > maxfd) {
+        maxfd = client_socket;
       }
-      queue--;
+      char client_ip[INET_ADDRSTRLEN];
+      if (ip_convert_check(client_ip, client_addr)) {
+        close(client_socket);
+      } else {
+        char name[50];
+        if (recv_name(client_socket, name, client_ip)) {
+          add_client(client_socket, name, client_ip); //add
+        } else {
+          close(client_socket); //if name recv fails, then socket is freed before it even gets stored
+        }
+      }
     }
   }
 
@@ -134,13 +135,13 @@ int same_room(int fd1, int fd2) {
   return 0;
 }
 
-void join_room(char* name_chat, int cs, char * chat, int i) {
+void join_room(char * name_chat, int cs, char * chat, int i) {
 
-    char old_room[50];
-    strncpy(old_room, get_croomcode(cs), 49);
-    old_room[49] = '\0';
+  char old_room[50];
+  strncpy(old_room, get_croomcode(cs), 49);
+  old_room[49] = '\0';
   char * temp = chat;
-  strsep( & temp, " ");  //changes temp position
+  strsep( & temp, " "); //changes temp position
 
   char new_room[50];
   strncpy(new_room, temp, 49); //organization
@@ -148,10 +149,10 @@ void join_room(char* name_chat, int cs, char * chat, int i) {
 
   set_croomcode(cs, new_room);
 
-  if (i){
-      header(name_chat, cs, new_room, "has joined the room --");
-  } else{
-      header(name_chat, cs, "!", "has left this room");
+  if (i) {
+    header(name_chat, cs, new_room, "has joined the room --");
+  } else {
+    header(name_chat, cs, "!", "has left this room");
   }
   loop_join(name_chat, cs, old_room);
 }
@@ -252,7 +253,7 @@ void delete_client_name(char * key, int ban) {
   }
 }
 
-void clean_all(){
+void clean_all() {
   for (int i = 0; i < 100; i++) {
     if (clients[i].active) {
       close(clients[i].fd);

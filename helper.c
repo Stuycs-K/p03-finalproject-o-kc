@@ -8,14 +8,21 @@ int makeServer() {
   hints.ai_socktype = SOCK_STREAM; // TCP stream
   hints.ai_flags = AI_PASSIVE; //ONLY IN SERVER, indicates that the socket can accept connections (listen) instead of manually connect *client
   //NULL indicates socket is own; necessary for PASSIVE to work
-  getaddrinfo(NULL, PORT, & hints, & results); //hints filters for similar socket, result has real socket!!!
+  if (getaddrinfo(NULL, PORT, & hints, & results)!= 0){ //hints filters for similar socket, result has real socket!!!
+     exit(1);
+  }
 
   int clientd;
   clientd = socket(results -> ai_family, results -> ai_socktype, results -> ai_protocol);
-
-  bind(clientd, results -> ai_addr, results -> ai_addrlen); //activate socket
-
-  listen(clientd, 100);
+  if (clientd < 0) {
+    exit(1);
+  }
+  if (bind(clientd, results -> ai_addr, results -> ai_addrlen) < 0){ //activate socket
+    exit(1);
+  }
+  if (listen(clientd, 100) < 0) {
+    exit(1);
+  }
 
   freeaddrinfo(results);
 
@@ -41,12 +48,18 @@ int client_tcp_handshake(char * server_ip) {
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
-  getaddrinfo(server_ip, PORT, & hints, & results);
+  if (getaddrinfo(server_ip, PORT, & hints, & results)!=0){
+    exit(1);
+  }
 
   int serverd;
   serverd = socket(results -> ai_family, results -> ai_socktype, results -> ai_protocol);
-
-  connect(serverd, results -> ai_addr, results -> ai_addrlen);
+  if (serverd < 0) {
+  exit(1);
+  }
+  if (connect(serverd, results->ai_addr, results->ai_addrlen) < 0) {
+    exit(1);
+  }
   //instead of binding **local vs remote socket
 
   freeaddrinfo(results);
