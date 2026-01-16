@@ -52,6 +52,7 @@ extern void whisper(char * name_chat, int cs, char * chat);
 extern void header(char* name_chat, int cs, char* chat, char*addon);  //formats a chat message to send based on the sent input
 extern void sender(int fd, int cs, char* name_chat);   //sends a chat message to a fd, with checks
 extern void loop_all(char* name_chat, int cs);
+extern void loop_join(char* name_chat, int cs, char* old_room);
 
 extern void listener(int listen_socket);        //handles incoming fds
 extern int ip_convert_check(char* ip, struct sockaddr_storage client_addr);

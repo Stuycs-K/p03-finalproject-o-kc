@@ -20,12 +20,35 @@ void recv_respond(int client_socket) {
     whisper(name_chat, client_socket, chat);
     return;
   } else if (!strncmp(chat, "/join ", 5) && bytes >= 8) {
+      char old_room[50];
+      strncpy(old_room, get_croomcode(client_socket), 49);
+      old_room[49] = '\0';
+
+      char *temp = chat;
+      strsep(&temp, " ");
+      char new_room[50];
+      strncpy(new_room, temp, 49);
+      new_room[49] = '\0';
       join_room(client_socket, chat);
-      header(name_chat, client_socket, chat, "has joined the room -- ");
+
+      header(name_chat, client_socket, new_room, "has joined the room --");
+      loop_join(name_chat, client_socket, old_room);
     }
     else if  (!strncmp(chat, "/pjoin ",6) && bytes >= 9){
+      char old_room[50];
+      strncpy(old_room, get_croomcode(client_socket), 49);
+      old_room[49] = '\0';
+
+      char *temp = chat;
+      strsep(&temp, " ");
+      char new_room[50];
+      strncpy(new_room, temp, 49);
+      new_room[49] = '\0';
+
       join_room(client_socket, chat);
+
       header(name_chat, client_socket, "!", "has left this room");
+      loop_join(name_chat, client_socket, old_room);
     }
     else{
       header(name_chat, client_socket, chat, ":");
@@ -63,9 +86,9 @@ void loop_all(char* name_chat, int cs){
   }
 }
 
-void loop_status(char* name_chat, int cs){
+void loop_join(char* name_chat, int cs, char* old_room){
   for (int fd = 0; fd <= maxfd; fd++) {
-    if (FD_ISSET(fd, & write_sds) && fd != cs && !strcmp(get_croomcode(cs), "lobby")) {
+    if (FD_ISSET(fd, & write_sds) && fd != cs && !strcmp(get_croomcode(fd), old_room)) {
       sender(fd, cs, name_chat);
     }
   }
@@ -143,7 +166,6 @@ void join_room(int cs, char * chat) {
 
   if (room_name != NULL) {
     set_croomcode(cs, room_name);
-
   }
 }
 

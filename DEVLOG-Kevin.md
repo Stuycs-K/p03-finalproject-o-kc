@@ -62,3 +62,5 @@ Made server helper bigger, and fixed ban which was broken
 - clients can only communicate within their rooms(a team)
 - later, plan to use another tag for talking in lobby simultaneously (eg. to invite people into a room)
 - cleaned server a little, kick and ban actually display differently
+
+### 2024-01-14 - Info-Tracking
