@@ -91,5 +91,5 @@ extern void user_interface();
 extern void new_status(int mode, char * modname, int* pos, char*special_store);
 extern void status(char * modname, char*special_store);
 extern void parse_helper(int * pos, char * special_store, char * modname);
-extern void check_command(char* special_store)
+extern void check_command(char* special_store);
 #endif

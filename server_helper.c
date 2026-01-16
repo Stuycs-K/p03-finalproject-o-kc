@@ -20,43 +20,40 @@ void recv_respond(int client_socket) {
     whisper(name_chat, client_socket, chat);
     return;
   } else if (!strncmp(chat, "/join ", 5) && bytes >= 8) {
-      char old_room[50];
-      strncpy(old_room, get_croomcode(client_socket), 49);
-      old_room[49] = '\0';
+    char old_room[50];
+    strncpy(old_room, get_croomcode(client_socket), 49);
+    old_room[49] = '\0';
 
-      char *temp = chat;
-      strsep(&temp, " ");
-      char new_room[50];
-      strncpy(new_room, temp, 49);
-      new_room[49] = '\0';
-      join_room(client_socket, chat);
+    char * temp = chat;
+    strsep( & temp, " ");
+    char new_room[50];
+    strncpy(new_room, temp, 49);
+    new_room[49] = '\0';
+    join_room(client_socket, chat);
 
-      header(name_chat, client_socket, new_room, "has joined the room --");
-      loop_join(name_chat, client_socket, old_room);
-    }
-    else if  (!strncmp(chat, "/pjoin ",6) && bytes >= 9){
-      char old_room[50];
-      strncpy(old_room, get_croomcode(client_socket), 49);
-      old_room[49] = '\0';
+    header(name_chat, client_socket, new_room, "has joined the room --");
+    loop_join(name_chat, client_socket, old_room);
+  } else if (!strncmp(chat, "/pjoin ", 6) && bytes >= 9) {
+    char old_room[50];
+    strncpy(old_room, get_croomcode(client_socket), 49);
+    old_room[49] = '\0';
 
-      char *temp = chat;
-      strsep(&temp, " ");
-      char new_room[50];
-      strncpy(new_room, temp, 49);
-      new_room[49] = '\0';
+    char * temp = chat;
+    strsep( & temp, " ");
+    char new_room[50];
+    strncpy(new_room, temp, 49);
+    new_room[49] = '\0';
 
-      join_room(client_socket, chat);
+    join_room(client_socket, chat);
 
-      header(name_chat, client_socket, "!", "has left this room");
-      loop_join(name_chat, client_socket, old_room);
-    }
-    else{
-      header(name_chat, client_socket, chat, ":");
-    }
-
-    loop_all(name_chat, client_socket);
+    header(name_chat, client_socket, "!", "has left this room");
+    loop_join(name_chat, client_socket, old_room);
+  } else {
+    header(name_chat, client_socket, chat, ":");
   }
 
+  loop_all(name_chat, client_socket);
+}
 
 void whisper(char * name_chat, int cs, char * chat) {
 
@@ -72,21 +69,23 @@ void header(char * name_chat, int cs, char * chat, char * addon) {
 }
 
 void sender(int fd, char * name_chat) {
-    if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
-      delete_client(fd);
-    }
+  if (send(fd, name_chat, strlen(name_chat) + 1, 0) <= 0) { //and respond
+    delete_client(fd);
+  }
 
 }
 
-void loop_all(char* name_chat, int cs){
+void loop_all(char * name_chat, int cs) {
   for (int fd = 0; fd <= maxfd; fd++) {
-    if (FD_ISSET(fd, & write_sds) && fd != cs && same_room(fd, cs)) {
-      sender(fd, name_chat);
+    if (FD_ISSET(fd, & write_sds) && fd != cs) {
+      if (cs == -1 || same_room(fd, cs)) {
+        sender(fd, name_chat);
+      }
     }
   }
 }
 
-void loop_join(char* name_chat, int cs, char* old_room){
+void loop_join(char * name_chat, int cs, char * old_room) {
   for (int fd = 0; fd <= maxfd; fd++) {
     if (FD_ISSET(fd, & write_sds) && fd != cs && !strcmp(get_croomcode(fd), old_room)) {
       sender(fd, name_chat);
@@ -175,9 +174,9 @@ int add_client(int fd, char * name, char * ip) {
   for (int i = 0; i < 100; i++) {
     if (!clients[i].active) {
       clients[i].fd = fd;
-      strncpy(clients[i].name, name, 49);    //copy name into name
+      strncpy(clients[i].name, name, 49); //copy name into name
 
-      strncpy(clients[i].ip, ip, 16);        //copy ip into ip
+      strncpy(clients[i].ip, ip, 16); //copy ip into ip
       clients[i].ip[INET_ADDRSTRLEN - 1] = '\0';
       clients[i].active = 1;
       client_count++;
@@ -226,7 +225,7 @@ char * get_croomcode(int fd) {
 int set_croomcode(int fd, char * code) {
   for (int i = 0; i < 100; i++) {
     if (clients[i].active && clients[i].fd == fd) {
-      strncpy(clients[i].room_code, code, 49);  //copy roomcode into roomcode
+      strncpy(clients[i].room_code, code, 49); //copy roomcode into roomcode
       clients[i].room_code[49] = '\0';
       return i;
     }
@@ -279,7 +278,7 @@ int new_maxfd(int old_max) {
 int add_banned(char * ip) {
   for (int i = 0; i < 100; i++) {
     if (!blacklist[i].active) {
-      strncpy(blacklist[i].ip, ip, 16);           //copy blacklisted ip into ip
+      strncpy(blacklist[i].ip, ip, 16); //copy blacklisted ip into ip
       blacklist[i].ip[INET_ADDRSTRLEN - 1] = '\0';
       blacklist[i].active = 1;
       return i;
@@ -308,7 +307,7 @@ int is_banned(char * ip) {
 void init_client() {
   for (int i = 0; i < 100; i++) {
     clients[i].active = 0;
-    strncpy(clients[i].room_code, "lobby", 6);   //copies lobby into roomcode
+    strncpy(clients[i].room_code, "lobby", 6); //copies lobby into roomcode
     clients[i].room_code[5] = '\0';
   }
 }
@@ -331,10 +330,9 @@ void user_interface() {
       new_status(1, "kick", & pos, special_store);
     } else if (c == 66) { //B for Ban
       new_status(2, "ban", & pos, special_store);
-    } else if (c == 116){
+    } else if (c == 116) {
       new_status(3, "type", & pos, special_store);
-    }
-    else if (c == 113) { //Q for exit
+    } else if (c == 113) { //Q for exit
       endwin();
       exit(1);
     }
@@ -393,10 +391,10 @@ void parse_helper(int * pos, char * special_store, char * modname) {
   }
 }
 
-void check_command(char* special_store) {
-  if (special_status == 1 || special_status == 2){
+void check_command(char * special_store) {
+  if (special_status == 1 || special_status == 2) {
     delete_client_name(special_store, special_status - 1);
-  } else if (special_status == 3){
+  } else if (special_status == 3) {
     char name_chat[60 + 60];
     snprintf(name_chat, 60 + 60, "server msg: %s", special_store);
     loop_all(name_chat, -1); //the -1 is filler
