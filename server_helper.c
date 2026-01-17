@@ -337,6 +337,7 @@ void user_interface() {
     } else if (c == 113) { //Q for exit
       clean_all();
     }
+
   } else if (special_status == 1) { // since select is valid EVEN WHEN theres only one character in stdin
     parse_helper( & pos, special_store, "kick");
   } else if (special_status == 2) {
@@ -360,6 +361,7 @@ void status(char * modname, char * special_store) {
   werase(input_win);
   box(input_win, 0, 0);
   mvwprintw(input_win, 1, 1, "%s : %s", modname, special_store);
+  mvwprintw(status_win, 1, 1, "SERVER [%d]",special_status);
   wrefresh(input_win);
 }
 
