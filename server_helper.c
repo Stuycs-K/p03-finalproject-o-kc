@@ -352,9 +352,7 @@ void new_status(int mode, char * modname, int * pos, char * special_store) {
   * pos = 0;
   memset(special_store, 0, 50);
   werase(input_win);
-  werase(status_win);
   box(input_win, 0, 0);
-  box(status_win, 0, 0);
   mvwprintw(input_win, 1, 1, "%s : ", modname);
   mvwprintw(status_win, 1, 1, "SERVER [%d]",special_status);
   wrefresh(input_win);
@@ -365,7 +363,6 @@ void status(char * modname, char * special_store) {
   werase(input_win);
   werase(status_win);
   box(input_win, 0, 0);
-  box(status_win, 0, 0);
   mvwprintw(input_win, 1, 1, "%s : %s", modname, special_store);
   mvwprintw(status_win, 1, 1, "SERVER [%d]",special_status);
   wrefresh(input_win);
@@ -380,6 +377,8 @@ void parse_helper(int * pos, char * special_store, char * modname) {
     if (!strcmp(special_store, "return")) {
       special_status = 0;
       * pos = 0; //reset "string reading" operation
+      mvwprintw(status_win, 1, 1, "SERVER [%d]",special_status);
+      wrefresh(status_win);
     } else {
       check_command(special_store);
       * pos = 0;

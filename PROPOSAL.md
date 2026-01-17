@@ -19,7 +19,7 @@ A server connects client data (files)
 **2.**
 - Select to organize read-write order
 - Sockets to connect client-server
-- send() and recv() to transfer data
+- STDIN_FILENO to get inputs, send() and recv() to transfer data
 - Allocating memory in case there needs to be non-stack storage
 - Signal handling for keys
 

@@ -32,6 +32,8 @@ SERVER INTERACTIONS
         - ENTER short, universally sent server msg (no more than 50 bytes)
 
 ### Resources/ References:
+
+LINK TO VIDEO: https://drive.google.com/file/d/11kUunXAWYXvCRyVzfgvSfxnikIgE68Y1/view?usp=sharing
 - ncurses.h     (display window input)
 - <arpa/inet.h> (to get client ip from sockaddr_storage)
 - <ctype.h>     (italics *if supported by terminal)
