@@ -112,7 +112,7 @@ int get_input(int ss){
 
 
   input[strcspn(input, "\n")] = '\0';
-  if (!strncmp(input, "/join ", 6)){
+  if (!strncmp(input, "/join ", 6) || !strncmp(input, "/pjoin ", 7)){
       char copy[SIZE];
       strncpy(copy, input, SIZE - 1);
       char* temp = copy;
