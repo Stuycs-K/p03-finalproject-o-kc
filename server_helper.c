@@ -361,7 +361,6 @@ void new_status(int mode, char * modname, int * pos, char * special_store) {
 
 void status(char * modname, char * special_store) {
   werase(input_win);
-  werase(status_win);
   box(input_win, 0, 0);
   mvwprintw(input_win, 1, 1, "%s : %s", modname, special_store);
   mvwprintw(status_win, 1, 1, "SERVER [%d]",special_status);
