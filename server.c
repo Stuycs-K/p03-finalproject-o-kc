@@ -31,7 +31,7 @@ int main(int argc, char * argv[]) {
   FD_ZERO( & master_sds);
 
   ncurses( & chat_win, & input_win, & status_win);
-  mvwprintw(status_win, 1, 1, "ROOM [%s]",room_code);
+  mvwprintw(status_win, 1, 1, "SERVER [%d]",special_status);
   wrefresh(status_win);
   cbreak();
   noecho();
